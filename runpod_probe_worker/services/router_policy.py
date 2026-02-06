@@ -48,6 +48,13 @@ class Router:
     def __init__(self):
         self.cb = CircuitBreaker()
 
+    def _resolve_family(self, job_type: str) -> tuple[str, str]:
+        if "video" in job_type:
+            return "VIDEO", EndpointType.VIDEO_GPU
+        if "train" in job_type:
+            return "LORA", EndpointType.LORA_TRAIN
+        return "PHOTO", EndpointType.PHOTO_GPU
+
     def _get_primary_url(self, family: str) -> str:
         version = os.getenv(f"AVA_VERSION_{family}", "v1")
         return os.getenv(f"GPU_{family}_URL_{version.upper()}") or ""
@@ -63,9 +70,7 @@ class Router:
             return None
 
     def route_job(self, job_type: str) -> RouteResult:
-        if "video" in job_type: family = "VIDEO"; ep = EndpointType.VIDEO_GPU
-        elif "train" in job_type: family = "LORA"; ep = EndpointType.LORA_TRAIN
-        else: family = "PHOTO"; ep = EndpointType.PHOTO_GPU
+        family, ep = self._resolve_family(job_type)
 
         primary_url = self._get_primary_url(family)
         
@@ -89,6 +94,44 @@ class Router:
         if success: self.cb.record_success(url)
         else: self.cb.record_failure(url)
 
+    def execute_with_fallback(self, job_type: str, action: str, payload: dict) -> dict:
+        family, _ = self._resolve_family(job_type)
+        primary_url = self._get_primary_url(family)
+        fallback = self._get_fallback_provider(family)
+
+        if primary_url and self.cb.is_healthy(primary_url):
+            provider = get_provider_instance(f"RunPod-{family}", primary_url, "gpu-key")
+            result = provider.execute(action, payload)
+            if result.get("success"):
+                self.report_result(primary_url, True)
+                return {
+                    **result,
+                    "status": "completed",
+                    "fallback_used": False,
+                    "provider": provider.name,
+                }
+            self.report_result(primary_url, False)
+
+        if fallback:
+            result = fallback.execute(action, payload)
+            if result.get("success"):
+                return {
+                    **result,
+                    "status": "fallback_used",
+                    "fallback_used": True,
+                    "provider": fallback.name,
+                }
+            return {
+                **result,
+                "status": "failed",
+                "fallback_used": True,
+                "provider": fallback.name,
+            }
+
+        raise RuntimeError(f"No healthy endpoints for {job_type}. Primary down, no fallback.")
+
 _router = Router()
 def route_job(t): return _router.route_job(t)
 def get_router(): return _router
+def execute_with_fallback(job_type: str, action: str, payload: dict) -> dict:
+    return _router.execute_with_fallback(job_type, action, payload)

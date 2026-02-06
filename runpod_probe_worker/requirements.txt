@@ -5,5 +5,7 @@ jsonschema==4.17.0
 requests==2.31.0
 PyJWT==2.10.1
 python-jose[cryptography]==3.3.0
+slowapi==0.1.9
+boto3==1.34.148
 psycopg2-binary==2.9.9
 python-dotenv==1.0.1

@@ -1,20 +1,27 @@
 from fastapi import APIRouter, Depends, HTTPException
-from services.authn import get_current_user, AuthResult
+from services.authn import get_current_user, AuthResult, require_plan, require_role
 from services.job_core import get_job_core
+from services.rate_limit import limiter
 from services.schema_validator import validate_payload
 
 router = APIRouter(prefix="/api/v1/lora")
 
 @router.post("/train")
+@limiter.limit("10/minute")
 async def train_lora(request: dict, user: AuthResult = Depends(get_current_user)):
-    if user.plan == "FREE": raise HTTPException(status_code=403, detail="PRO plan required")
+    require_role(user, ["admin", "user"])
+    require_plan(user, ["PRO", "ENTERPRISE"])
     errors = validate_payload("lora.train", request)
-    if errors: raise HTTPException(status_code=400, detail=errors)
+    if errors:
+        raise HTTPException(status_code=400, detail=errors)
     job, is_new = get_job_core().create_job("lora.train", request, user_id=user.user_id)
     return {"job_id": job.job_id, "is_new": is_new}
 
 @router.get("/jobs/{job_id}")
+@limiter.limit("60/minute")
 async def get_lora_job(job_id: str, user: AuthResult = Depends(get_current_user)):
+    require_role(user, ["admin", "user", "viewer"])
     job = get_job_core().get_job(job_id)
-    if not job or job.user_id != user.user_id: raise HTTPException(status_code=403)
+    if not job or job.user_id != user.user_id:
+        raise HTTPException(status_code=403, detail="Forbidden")
     return job

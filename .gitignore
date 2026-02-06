@@ -44,23 +44,22 @@ Thumbs.db
 # Local secrets (DO NOT COMMIT)
 _secrets/
 
-_secrets/
-.env.local
-.env.*.local
-token.txt
+# Frontend (explicit)
 frontend/node_modules/
 frontend/.next/
+
+# Build artifacts
 **/bin/
 **/obj/
 **/__pycache__/
 
-# local env
+# Local env
 .env.local
 .env.*.local
 frontend/.env.local
 frontend/.env.*.local
 
+# Tokens
+token.txt
 token*.txt
 *.token
-.env.local
-_secrets/

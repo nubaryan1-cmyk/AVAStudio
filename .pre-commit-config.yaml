@@ -1,0 +1,13 @@
+repos:
+  - repo: local
+    hooks:
+      - id: check-trash-files
+        name: Prevent committing trash files
+        entry: python scripts/check_trash_files.py
+        language: system
+        pass_filenames: false
+      - id: trufflehog-scan
+        name: TruffleHog secrets scan
+        entry: python scripts/check_secrets_trufflehog.py
+        language: system
+        pass_filenames: false

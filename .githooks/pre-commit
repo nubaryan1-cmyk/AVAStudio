@@ -1,0 +1,5 @@
+#!/bin/sh
+set -eu
+
+python scripts/check_trash_files.py
+python scripts/check_secrets_trufflehog.py

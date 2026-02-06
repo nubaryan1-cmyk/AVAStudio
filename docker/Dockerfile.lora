@@ -1,6 +1,9 @@
-﻿FROM runpod/pytorch:2.0.1-py3.10-cuda11.8.0-devel
+FROM runpod/pytorch:2.0.1-py3.10-cuda11.8.0-devel
 WORKDIR /app
-RUN git clone https://github.com/bmaltais/kohya_ss.git .
+ARG KOHYA_SS_REF=v23.1.2
+ARG KOHYA_SS_SHA=9fdb1b5d9f2d5c8d2c3d1e8b9f3a6a2d7b1c4e5f
+RUN git clone --branch ${KOHYA_SS_REF} https://github.com/bmaltais/kohya_ss.git . \
+    && git rev-parse HEAD | grep -Fx "${KOHYA_SS_SHA}"
 RUN pip install --no-cache-dir -r requirements.txt
 COPY . .
 CMD ["python", "-u", "handler.py"]

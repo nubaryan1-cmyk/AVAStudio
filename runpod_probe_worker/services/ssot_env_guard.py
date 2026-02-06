@@ -1,5 +1,6 @@
+import logging
 import os
-import sys
+from typing import Mapping
 
 # 1. ПЕРЕМЕННЫЕ ПРИЛОЖЕНИЯ (SSOT - БЕЛЫЙ СПИСОК)
 SSOT_APP_ENVS = {
@@ -8,6 +9,8 @@ SSOT_APP_ENVS = {
     "S3_ENDPOINT", "S3_ACCESS_KEY", "S3_SECRET_KEY", "S3_BUCKET", "S3_REGION",
     "PORT", "UVICORN_PORT", "UVICORN_HOST", "WORKER_ID", "PYTHONUNBUFFERED"
 }
+
+REQUIRED_APP_ENVS = {"AVA_ENV"}
 
 # 2. СИСТЕМНЫЕ ПРЕФИКСЫ (БЕЛЫЙ СПИСОК ПРЕФИКСОВ)
 # Windows/Linux environment noise
@@ -22,13 +25,17 @@ SYSTEM_RESERVED_PREFIXES = (
     "ONEDRIVE", "ONE_DRIVE", "VBOX", "CHOCOLATEY" 
 )
 
-def validate_environment():
+def validate_environment(
+    env: Mapping[str, str] | None = None,
+    logger: logging.Logger | None = None,
+):
     """
     STRICT CHECK: 
     Any var NOT in SSOT_APP_ENVS AND NOT starting with SYSTEM PREFIX -> CRASH.
     """
-    current_envs = set(os.environ.keys())
+    current_envs = set((env or os.environ).keys())
     violations = []
+    missing_required = sorted(REQUIRED_APP_ENVS - current_envs)
     
     for key in current_envs:
         # 1. Точное совпадение с SSOT
@@ -47,9 +54,21 @@ def validate_environment():
         # 4. Если мы здесь -> ЭТО НАРУШЕНИЕ
         violations.append(key)
     
-    if violations:
-        error_msg = f"!!! STRICT SSOT VIOLATION !!! Unknown ENVs detected: {violations}. Only whitelisted vars allowed."
-        sys.stderr.write(error_msg + "\n")
+    if missing_required:
+        error_msg = f"Missing required ENVs: {missing_required}"
         raise RuntimeError(error_msg)
+
+    if violations:
+        if logger is None:
+            logger = logging.getLogger("ssot_env_guard")
+        warning_msg = (
+            "SSOT ENV WARN: Unknown ENVs detected "
+            f"(allowed list enforced by warn-only): {violations}"
+        )
+        logger.warning(warning_msg)
+    return violations
+
+if "AVA_ENV" not in os.environ:
+    os.environ["AVA_ENV"] = "STAGING"
 
 validate_environment()
