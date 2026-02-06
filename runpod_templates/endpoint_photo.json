@@ -1,0 +1,13 @@
+﻿{
+  "name": "ava-photo-gpu",
+  "gpu_ids": ["AMPERE_48"], 
+  "containerDiskInGb": 50,
+  "min_vcpu_count": 4,
+  "min_memory_in_gb": 32,
+  "docker_args": "",
+  "env": [
+    { "key": "MODEL_TYPE", "value": "flux-dev" },
+    { "key": "HF_TOKEN", "value": "REQ_IN_DASHBOARD" }
+  ],
+  "image_name": "avastudio/photo-worker:v1"
+}

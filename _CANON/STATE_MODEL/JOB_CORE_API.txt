@@ -1,0 +1,49 @@
+AVA — JOB CORE API CONTRACT
+Version: 2.0 (FINAL)
+Status: LOCKED — IMMUTABLE
+Authority: OWNER DECISION (2025-01-11)
+
+Job Core is the ONLY owner of job state transitions.
+
+OPERATIONS:
+
+create_job()
+- sets state: CREATED
+
+validate_job()
+- CREATED -> VALIDATING -> READY
+- on error -> FAILED (CONFIG_ERROR | DATASET_ERROR)
+
+enqueue_job()
+- READY -> IN_QUEUE
+
+schedule_job()
+- IN_QUEUE -> SCHEDULED
+
+start_job()
+- SCHEDULED -> RUNNING
+
+fail_job(reason)
+- RUNNING -> FAILED
+- reason required
+
+complete_job()
+- RUNNING -> COMPLETED
+
+timeout_job()
+- RUNNING -> TIMEOUT
+
+cancel_job()
+- ANY -> CANCELLED (terminal)
+
+requeue_job()
+- FAILED jobs may be re-queued to IN_QUEUE (with retries counter)
+- retry policy enforced
+- NOTE: PAUSED and RETRYING states are PERMANENTLY FORBIDDEN
+
+RULES:
+- Executors MUST NOT change state directly
+- UI MUST call Job Core only
+- Policies are mandatory
+- PAUSED and RETRYING states are PERMANENTLY FORBIDDEN
+- This file is FINAL and IMMUTABLE — no further changes permitted

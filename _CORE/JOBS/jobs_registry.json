@@ -1,0 +1,96 @@
+﻿{
+    "version":  "1.0",
+    "description":  "AVA canonical job registry",
+    "jobs":  [
+                 {
+                     "job_id":  "test-job-001",
+                     "job_type":  "LORA_TRAIN",
+                     "state":  "COMPLETED",
+                     "reason":  "",
+                     "created_at":  "2026-01-08T14:58:41.0377390+03:00",
+                     "updated_at":  "2026-01-08T15:17:36.5709800+03:00",
+                     "executor":  "kohya_ss",
+                     "artifacts":  {
+                                       "output":  "",
+                                       "logs":  "",
+                                       "checkpoints":  ""
+                                   },
+                     "retry_count":  0
+                 },
+                 {
+                     "job_id":  "runpod-dry-001",
+                     "job_type":  "RUNPOD_DRY",
+                     "state":  "COMPLETED",
+                     "reason":  "",
+                     "created_at":  "2026-01-08T15:37:29.4618789+03:00",
+                     "updated_at":  "2026-01-08T15:52:30.6701006+03:00",
+                     "executor":  "runpod",
+                     "artifacts":  {
+                                       "output":  "",
+                                       "logs":  "",
+                                       "checkpoints":  ""
+                                   },
+                     "retry_count":  0
+                 },
+                 {
+                     "job_id":  "runpod-kohya-001",
+                     "job_type":  "LORA_TRAIN",
+                     "state":  "FAILED",
+                     "reason":  "TIMEOUT_ERROR",
+                     "created_at":  "2026-01-08T15:57:59.5706215+03:00",
+                     "updated_at":  "2026-01-08T16:18:42.7022100+03:00",
+                     "executor":  "runpod",
+                     "artifacts":  {
+                                       "output":  "",
+                                       "logs":  "",
+                                       "checkpoints":  ""
+                                   },
+                     "retry_count":  0
+                 },
+                 {
+                     "job_id":  "runpod-kohya-003",
+                     "job_type":  "UNDEFINED",
+                     "state":  "FAILED",
+                     "reason":  "EXECUTOR_ERROR",
+                     "created_at":  "2026-01-08T16:27:53.7365671+03:00",
+                     "updated_at":  "2026-01-08T16:27:53.8077804+03:00",
+                     "executor":  "kohya_ss",
+                     "artifacts":  {
+                                       "output":  "",
+                                       "logs":  "D:\\AVAStudio_WORK\\_LOGS\\kohya\\runpod-kohya-003.log",
+                                       "checkpoints":  ""
+                                   },
+                     "retry_count":  0
+                 },
+                 {
+                     "job_id":  "kohya-path-test-002",
+                     "job_type":  "UNDEFINED",
+                     "state":  "CANCELLED",
+                     "reason":  "USER_CANCEL",
+                     "created_at":  "2026-01-08T17:45:31.2501522+03:00",
+                     "updated_at":  "2026-01-08T17:56:16.1783062+03:00",
+                     "executor":  "kohya_ss",
+                     "artifacts":  {
+                                       "output":  "",
+                                       "logs":  "D:\\AVAStudio_WORK\\_LOGS\\kohya\\kohya-path-test-002.log",
+                                       "checkpoints":  ""
+                                   },
+                     "retry_count":  0
+                 },
+                 {
+                     "job_id":  "retry-test-001",
+                     "job_type":  "",
+                     "state":  "FAILED",
+                     "reason":  "",
+                     "created_at":  "2026-01-08T17:50:47.3705058+03:00",
+                     "updated_at":  "2026-01-08T17:50:47.3705058+03:00",
+                     "executor":  "",
+                     "artifacts":  {
+                                       "output":  "",
+                                       "logs":  "",
+                                       "checkpoints":  ""
+                                   },
+                     "retry_count":  0
+                 }
+             ]
+}

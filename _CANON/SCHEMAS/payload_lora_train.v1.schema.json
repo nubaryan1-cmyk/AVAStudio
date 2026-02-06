@@ -1,0 +1,100 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "_CANON/SCHEMAS/payload_lora_train.v1.schema.json",
+  "title": "LoRA Train Payload",
+  "description": "Canonical payload schema for lora.train job type",
+  "type": "object",
+  "properties": {
+    "dataset": {
+      "type": "object",
+      "properties": {
+        "images_url": {
+          "type": "string",
+          "format": "uri",
+          "description": "URL to dataset archive (zip/tar)"
+        },
+        "images_s3_key": {
+          "type": "string",
+          "description": "S3 key for dataset"
+        },
+        "num_images": {
+          "type": "integer",
+          "minimum": 5,
+          "maximum": 100
+        },
+        "captions_included": {
+          "type": "boolean",
+          "default": false
+        }
+      },
+      "required": []
+    },
+    "training": {
+      "type": "object",
+      "properties": {
+        "base_model": {
+          "type": "string",
+          "default": "flux-dev"
+        },
+        "epochs": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 100,
+          "default": 10
+        },
+        "learning_rate": {
+          "type": "number",
+          "minimum": 0.00001,
+          "maximum": 0.01,
+          "default": 0.0001
+        },
+        "batch_size": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 8,
+          "default": 1
+        },
+        "resolution": {
+          "type": "integer",
+          "minimum": 512,
+          "maximum": 2048,
+          "default": 1024
+        },
+        "lora_rank": {
+          "type": "integer",
+          "minimum": 4,
+          "maximum": 128,
+          "default": 16
+        },
+        "lora_alpha": {
+          "type": "integer",
+          "minimum": 4,
+          "maximum": 128,
+          "default": 16
+        },
+        "trigger_word": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 50
+        }
+      },
+      "required": []
+    },
+    "output": {
+      "type": "object",
+      "properties": {
+        "lora_name": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 100
+        },
+        "save_checkpoints": {
+          "type": "boolean",
+          "default": false
+        }
+      }
+    }
+  },
+  "required": ["dataset", "training"],
+  "additionalProperties": false
+}

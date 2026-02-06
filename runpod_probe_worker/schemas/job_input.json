@@ -1,0 +1,18 @@
+﻿{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["task", "job_id", "user_id", "mode", "params"],
+  "properties": {
+    "task": { "type": "string", "enum": ["train_lora","generate_image","generate_video"] },
+    "job_id": { "type": "string" },
+    "user_id": { "type": "string" },
+    "mode": { "type": "string", "enum": ["Simple","Advanced"] },
+    "dataset_location": { "type": "string" },
+    "output_location": { "type": "string" },
+    "training_preset": { "type": "string" },
+    "training_params": { "type": "object" },
+    "params": { "type": "object" },
+    "dry_run": { "type": "boolean", "default": false }
+  }
+}

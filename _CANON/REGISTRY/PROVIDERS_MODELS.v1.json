@@ -1,0 +1,78 @@
+{
+  "_meta": {
+    "version": "1.0",
+    "authority": "_CANON/REGISTRY/PROVIDERS_MODELS.v1.json",
+    "status": "CANON",
+    "description": "Canonical provider and model registry for photo/video generation"
+  },
+  "photo_providers": {
+    "flux": {
+      "name": "Flux",
+      "type": "api+self-hosted",
+      "models": ["flux-dev", "flux-schnell", "flux-pro"],
+      "capabilities": ["text2img", "img2img", "inpainting"],
+      "max_resolution": 2048,
+      "cost_class": "medium",
+      "endpoint_type": "PHOTO-GPU"
+    },
+    "z-image": {
+      "name": "Z-Image",
+      "type": "partner-api",
+      "models": ["z-image-v1", "z-image-v2"],
+      "capabilities": ["text2img", "img2img"],
+      "max_resolution": 1536,
+      "cost_class": "low",
+      "endpoint_type": "PHOTO-GPU"
+    },
+    "qwen-image": {
+      "name": "Qwen Image",
+      "type": "api",
+      "models": ["qwen-vl-max"],
+      "capabilities": ["text2img", "img2img", "image-understanding"],
+      "max_resolution": 2048,
+      "cost_class": "medium",
+      "endpoint_type": "PHOTO-GPU"
+    },
+    "nano-banana": {
+      "name": "Nano Banana Pro",
+      "type": "api",
+      "models": ["nano-banana-pro-v1"],
+      "capabilities": ["text2img"],
+      "max_resolution": 1024,
+      "cost_class": "low",
+      "endpoint_type": "PHOTO-GPU"
+    }
+  },
+  "video_providers": {
+    "wan": {
+      "name": "WAN",
+      "type": "api+self-hosted",
+      "models": ["wan-2.0", "wan-2.1"],
+      "capabilities": ["text2video", "img2video"],
+      "max_duration_seconds": 10,
+      "max_resolution": 1280,
+      "cost_class": "high",
+      "endpoint_type": "VIDEO-GPU"
+    },
+    "kling": {
+      "name": "Kling",
+      "type": "api",
+      "models": ["kling-v1", "kling-v1.5"],
+      "capabilities": ["text2video", "img2video"],
+      "max_duration_seconds": 5,
+      "max_resolution": 1080,
+      "cost_class": "medium",
+      "endpoint_type": "VIDEO-GPU"
+    },
+    "veo": {
+      "name": "Veo",
+      "type": "api",
+      "models": ["veo-1", "veo-2"],
+      "capabilities": ["text2video"],
+      "max_duration_seconds": 8,
+      "max_resolution": 1080,
+      "cost_class": "high",
+      "endpoint_type": "VIDEO-GPU"
+    }
+  }
+}

@@ -1,0 +1,12 @@
+﻿{
+  "name": "ava-video-gpu",
+  "gpu_ids": ["AMPERE_48", "ADA_48"], 
+  "containerDiskInGb": 80,
+  "min_vcpu_count": 8,
+  "min_memory_in_gb": 64,
+  "env": [
+    { "key": "VIDEO_MODEL", "value": "wan-2.1" },
+    { "key": "USE_FFMPEG", "value": "1" }
+  ],
+  "image_name": "avastudio/video-worker:v1"
+}

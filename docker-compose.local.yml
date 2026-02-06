@@ -1,0 +1,119 @@
+# =============================================================================
+# AVA STUDIO - LOCAL (STAGING + LOCAL RESOURCES)
+# =============================================================================
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:15-alpine
+    container_name: ava_postgres
+    environment:
+      POSTGRES_USER: ava
+      POSTGRES_PASSWORD: ava_local_password
+      POSTGRES_DB: ava_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ava -d ava_db"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - ava_network
+
+  minio:
+    image: minio/minio:latest
+    container_name: ava_minio
+    command: server /data --console-address ":9001"
+    environment:
+      MINIO_ROOT_USER: ava_access_key
+      MINIO_ROOT_PASSWORD: ava_secret_key
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    volumes:
+      - minio_data:/data
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    networks:
+      - ava_network
+
+  minio-init:
+    image: minio/mc:latest
+    depends_on:
+      minio:
+        condition: service_healthy
+    entrypoint: >
+      /bin/sh -c "
+      mc alias set local http://minio:9000 ava_access_key ava_secret_key;
+      mc mb --ignore-existing local/ava-artifacts-staging;
+      "
+    networks:
+      - ava_network
+
+  backend:
+    build:
+      context: ./runpod_probe_worker
+      dockerfile: Dockerfile
+    container_name: ava_backend
+    env_file:
+      - .env.local
+    environment:
+      AVA_ENV: STAGING
+      AVA_MOCK_MODE: "1"
+      DATABASE_URL: postgresql://ava:ava_local_password@postgres:5432/ava_db
+      AWS_S3_BUCKET: ava-artifacts-staging
+      AWS_ACCESS_KEY_ID: ava_access_key
+      AWS_SECRET_ACCESS_KEY: ava_secret_key
+      AWS_REGION: us-east-1
+    ports:
+      - "8000:8000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      minio:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    networks:
+      - ava_network
+    restart: unless-stopped
+
+  worker:
+    build:
+      context: ./runpod_probe_worker
+      dockerfile: Dockerfile
+    container_name: ava_worker
+    env_file:
+      - .env.local
+    environment:
+      AVA_ENV: STAGING
+      AVA_MOCK_MODE: "1"
+      DATABASE_URL: postgresql://ava:ava_local_password@postgres:5432/ava_db
+      AWS_S3_BUCKET: ava-artifacts-staging
+      AWS_ACCESS_KEY_ID: ava_access_key
+      AWS_SECRET_ACCESS_KEY: ava_secret_key
+      AWS_REGION: us-east-1
+    command: ["python", "dist_worker.py"]
+    depends_on:
+      backend:
+        condition: service_healthy
+    networks:
+      - ava_network
+    restart: unless-stopped
+
+volumes:
+  postgres_data:
+  minio_data:
+
+networks:
+  ava_network:
+    driver: bridge

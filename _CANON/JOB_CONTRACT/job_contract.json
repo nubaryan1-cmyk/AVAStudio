@@ -1,0 +1,35 @@
+{
+  "job_id": "uuid",
+  "job_type": "STRING",
+  "state": "STRING",
+  "ssot_version": "1.1",
+  "correlation_id": "uuid | null",
+  "user_id": "STRING | null",
+  "timestamps": {
+    "created": "ISO-8601",
+    "started": null,
+    "finished": null
+  },
+  "payload": {
+    "dataset": {},
+    "training": {},
+    "lora": {},
+    "inference": {},
+    "generation": {}
+  },
+  "progress": {
+    "percent": 0,
+    "step": 0,
+    "total": 0,
+    "message": ""
+  },
+  "result": {
+    "artifacts": [],
+    "metrics": {},
+    "error": {
+      "class": "STRING | null",
+      "code": "STRING | null",
+      "message": "STRING | null"
+    }
+  }
+}

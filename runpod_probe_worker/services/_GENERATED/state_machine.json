@@ -1,0 +1,54 @@
+{
+  "_meta": "Generated from STATE_MODEL.txt",
+  "states": [
+    "CREATED",
+    "VALIDATING",
+    "READY",
+    "IN_QUEUE",
+    "SCHEDULED",
+    "RUNNING",
+    "COMPLETED",
+    "FAILED",
+    "CANCELLED",
+    "TIMEOUT"
+  ],
+  "transitions": {
+    "CREATED": [
+      "VALIDATING",
+      "CANCELLED"
+    ],
+    "VALIDATING": [
+      "READY",
+      "FAILED",
+      "CANCELLED"
+    ],
+    "READY": [
+      "IN_QUEUE",
+      "CANCELLED"
+    ],
+    "IN_QUEUE": [
+      "SCHEDULED",
+      "CANCELLED"
+    ],
+    "SCHEDULED": [
+      "RUNNING",
+      "CANCELLED"
+    ],
+    "RUNNING": [
+      "COMPLETED",
+      "FAILED",
+      "TIMEOUT",
+      "CANCELLED"
+    ],
+    "COMPLETED": [],
+    "FAILED": [
+      "CANCELLED"
+    ],
+    "CANCELLED": [],
+    "TIMEOUT": []
+  },
+  "_permanently_forbidden": [
+    "PAUSED",
+    "RETRYING"
+  ]
+}

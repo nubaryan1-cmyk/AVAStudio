@@ -1,0 +1,99 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "_CANON/SCHEMAS/job_contract.v1.schema.json",
+  "title": "AVA Job Contract",
+  "description": "Canonical JSON Schema for job_contract.json v1.1",
+  "type": "object",
+  "properties": {
+    "job_id": {
+      "type": "string",
+      "format": "uuid",
+      "description": "Unique job identifier"
+    },
+    "job_type": {
+      "type": "string",
+      "enum": ["photo.generate", "video.generate", "lora.train", "lora.infer", "train_lora"],
+      "description": "Job type from canonical registry"
+    },
+    "state": {
+      "type": "string",
+      "enum": ["CREATED", "VALIDATING", "READY", "IN_QUEUE", "SCHEDULED", "RUNNING", "COMPLETED", "FAILED", "CANCELLED", "TIMEOUT"],
+      "description": "Canonical job state (10 states only)"
+    },
+    "ssot_version": {
+      "type": "string",
+      "pattern": "^[0-9]+\\.[0-9]+$",
+      "description": "SSOT contract version (MAJOR.MINOR)"
+    },
+    "correlation_id": {
+      "type": "string",
+      "description": "Request correlation ID for tracing"
+    },
+    "user_id": {
+      "type": "string",
+      "description": "Owner user ID"
+    },
+    "timestamps": {
+      "type": "object",
+      "properties": {
+        "created": { "type": ["string", "null"], "format": "date-time" },
+        "started": { "type": ["string", "null"], "format": "date-time" },
+        "finished": { "type": ["string", "null"], "format": "date-time" }
+      },
+      "required": ["created"],
+      "additionalProperties": false
+    },
+    "payload": {
+      "type": "object",
+      "description": "Job-specific payload (validated against job_type schema)"
+    },
+    "progress": {
+      "type": "object",
+      "properties": {
+        "percent": { "type": "integer", "minimum": 0, "maximum": 100 },
+        "step": { "type": "integer", "minimum": 0 },
+        "total": { "type": "integer", "minimum": 0 },
+        "message": { "type": "string" }
+      },
+      "additionalProperties": false
+    },
+    "result": {
+      "type": "object",
+      "properties": {
+        "artifacts": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "type": { "type": "string", "enum": ["image", "video", "lora", "checkpoint", "log"] },
+              "uri": { "type": "string", "format": "uri" },
+              "size": { "type": "integer" },
+              "sha256": { "type": "string" },
+              "meta": { "type": "object" }
+            },
+            "required": ["type", "uri"]
+          }
+        },
+        "metrics": { "type": "object" },
+        "error": {
+          "oneOf": [
+            { "type": "null" },
+            {
+              "type": "object",
+              "properties": {
+                "class": { "type": "string", "enum": ["infra", "user", "model", "quota", "fatal"] },
+                "code": { "type": "string" },
+                "message": { "type": "string" }
+              },
+              "required": ["class", "code", "message"]
+            }
+          ]
+        }
+      },
+      "required": ["artifacts", "metrics", "error"],
+      "additionalProperties": false
+    }
+  },
+  "required": ["job_id", "job_type", "state", "ssot_version", "timestamps", "payload", "progress", "result"],
+  "additionalProperties": false
+}

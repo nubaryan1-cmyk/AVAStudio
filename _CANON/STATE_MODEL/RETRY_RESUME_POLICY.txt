@@ -1,0 +1,43 @@
+AVA — RETRY & RESUME POLICY
+Version: 2.0 (FINAL)
+Status: LOCKED — IMMUTABLE
+Authority: OWNER DECISION (2025-01-11)
+
+RETRY POLICY:
+
+ALLOWED IF:
+- state = FAILED
+- reason IN:
+  GPU_OOM
+  EXECUTOR_ERROR
+  TIMEOUT_ERROR
+  SYSTEM_ERROR
+
+FORBIDDEN IF:
+- reason IN:
+  CONFIG_ERROR
+  DATASET_ERROR
+  USER_ACTION
+
+RETRY MECHANISM:
+- FAILED jobs are re-queued to IN_QUEUE (with retries counter incremented)
+- NOTE: RETRYING state is PERMANENTLY FORBIDDEN — use IN_QUEUE for retry
+
+LIMITS:
+- max_retry = 3
+- retry_delay = exponential (1m, 5m, 15m)
+
+RESUME POLICY:
+- NOTE: PAUSED state is PERMANENTLY FORBIDDEN
+- Resume functionality is NOT supported
+
+CANCEL POLICY:
+- CANCELLED is terminal
+- no retry
+- no resume
+
+RULES:
+- Policies are enforced by Job Core
+- Executors must not override policy
+- PAUSED and RETRYING states are PERMANENTLY FORBIDDEN
+- This file is FINAL and IMMUTABLE — no further changes permitted

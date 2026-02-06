@@ -1,0 +1,20 @@
+﻿{
+  "_meta": {
+    "version": "1.0",
+    "status": "DEBUG"
+  },
+  "flags": {
+    "video_v2_generation": {
+      "default": false,
+      "rollout": {
+        "type": "plan",
+        "allowed_plans": ["PRO", "ENTERPRISE"]
+      },
+      "kill_switch": false
+    },
+    "photo_flux_beta": {
+      "default": false,
+      "rollout": { "type": "percentage", "value": 10 }
+    }
+  }
+}

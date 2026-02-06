@@ -1,0 +1,34 @@
+{
+  "_WARNING": "THIS IS A GENERATED FILE — NOT AN AUTHORITY",
+  "_generated_from": "_CANON/STATE_MODEL/STATE_MODEL.txt v2.0 FINAL",
+  "_location": "_GENERATED/ (OUTSIDE _CANON — NOT AUTHORITATIVE)",
+  "_note": "SOLE AUTHORITY = STATE_MODEL.txt. This file is for runtime convenience ONLY.",
+  "_canon_version": "2.0",
+  "_canon_status": "IMMUTABLE (OWNER APPROVED)",
+  "_permanently_forbidden": ["PAUSED", "RETRYING"],
+  "states": [
+    "CREATED",
+    "VALIDATING",
+    "READY",
+    "IN_QUEUE",
+    "SCHEDULED",
+    "RUNNING",
+    "COMPLETED",
+    "FAILED",
+    "CANCELLED",
+    "TIMEOUT"
+  ],
+  "terminal_states": ["COMPLETED", "FAILED", "CANCELLED", "TIMEOUT"],
+  "transitions": {
+    "CREATED": ["VALIDATING", "CANCELLED"],
+    "VALIDATING": ["READY", "FAILED", "CANCELLED"],
+    "READY": ["IN_QUEUE", "CANCELLED"],
+    "IN_QUEUE": ["SCHEDULED", "CANCELLED"],
+    "SCHEDULED": ["RUNNING", "CANCELLED"],
+    "RUNNING": ["COMPLETED", "FAILED", "TIMEOUT", "CANCELLED"],
+    "COMPLETED": [],
+    "FAILED": ["CANCELLED"],
+    "CANCELLED": [],
+    "TIMEOUT": []
+  }
+}

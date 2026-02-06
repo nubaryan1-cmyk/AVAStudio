@@ -1,0 +1,21 @@
+AVA — STATE TRANSITION REASONS
+Version: 2.0 (FINAL)
+Status: LOCKED — IMMUTABLE
+Authority: OWNER DECISION (2025-01-11)
+
+REASONS:
+
+USER_ACTION
+CONFIG_ERROR
+DATASET_ERROR
+GPU_OOM
+EXECUTOR_ERROR
+TIMEOUT_ERROR
+SYSTEM_ERROR
+SUCCESS
+
+RULES:
+- Every FAILED, CANCELLED state MUST have a reason
+- Reasons are mandatory for logging and analytics
+- NOTE: RETRYING state is PERMANENTLY FORBIDDEN — not applicable
+- This file is FINAL and IMMUTABLE — no further changes permitted

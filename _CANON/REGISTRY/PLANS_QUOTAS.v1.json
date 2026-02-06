@@ -1,0 +1,23 @@
+﻿{
+  "_meta": {
+    "version": "1.0",
+    "authority": "CANON"
+  },
+  "plans": {
+    "FREE": {
+      "daily_jobs": 5,
+      "concurrent_jobs": 1,
+      "features": ["photo.generate"]
+    },
+    "PRO": {
+      "daily_jobs": 100,
+      "concurrent_jobs": 3,
+      "features": ["photo.generate", "video.generate", "lora.train"]
+    },
+    "ENTERPRISE": {
+      "daily_jobs": 10000,
+      "concurrent_jobs": 10,
+      "features": ["*"]
+    }
+  }
+}

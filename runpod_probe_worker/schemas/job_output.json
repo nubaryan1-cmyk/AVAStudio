@@ -1,0 +1,17 @@
+﻿{
+  "type": "object",
+  "required": ["status","job_id","task","result"],
+  "properties": {
+    "status": { "type": "string" },
+    "job_id": { "type": "string" },
+    "task": { "type": "string" },
+    "result": {
+      "type": "object",
+      "required": ["ok"],
+      "properties": {
+        "ok": { "type": "boolean" },
+        "message": { "type": "string" }
+      }
+    }
+  }
+}

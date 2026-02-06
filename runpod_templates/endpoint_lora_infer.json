@@ -1,0 +1,186 @@
+{
+  "$schema": "https://schema.runpod.io/endpoint/v1",
+  "name": "ava-lora-infer",
+  "description": "AVA Studio LoRA Inference Endpoint",
+  "version": "1.2.0",
+  
+  "gpu": {
+    "type": "NVIDIA RTX A5000",
+    "count": 1,
+    "minVRAM": "24GB",
+    "alternatives": ["RTX 4090", "RTX A6000"],
+    "notes": "Same requirements as photo generation"
+  },
+  
+  "scaling": {
+    "staging": {
+      "minWorkers": 0,
+      "maxWorkers": 2,
+      "idleTimeout": 300,
+      "scaleUpDelay": 30
+    },
+    "production": {
+      "minWorkers": 1,
+      "maxWorkers": 8,
+      "idleTimeout": 600,
+      "scaleUpDelay": 15
+    }
+  },
+  
+  "container": {
+    "image": "your-registry/ava-lora-infer:latest",
+    "ports": [8000],
+    "healthcheck": {
+      "path": "/health",
+      "interval": 30,
+      "timeout": 10
+    },
+    "volumeMounts": [
+      {
+        "path": "/workspace/models",
+        "size": "50GB",
+        "notes": "Base models"
+      },
+      {
+        "path": "/workspace/loras",
+        "size": "50GB",
+        "notes": "Cached LoRA weights"
+      }
+    ]
+  },
+  
+  "environment": {
+    "REQUIRED_IN_RUNPOD_DASHBOARD": {
+      "AWS_ACCESS_KEY_ID": "For downloading LoRA weights from S3",
+      "AWS_SECRET_ACCESS_KEY": "S3 credentials",
+      "AWS_S3_BUCKET": "Artifact storage bucket",
+      "AWS_REGION": "S3 region",
+      "HF_TOKEN": "For base model downloads"
+    },
+    "OPTIONAL": {
+      "LORA_CACHE_SIZE_GB": "Max cache size for LoRAs (default: 20)",
+      "DEFAULT_BASE_MODEL": "flux-dev | sdxl-base-1.0",
+      "WARMUP_ENABLED": "Pre-load base model on startup"
+    }
+  },
+  
+  "api": {
+    "input": {
+      "type": "object",
+      "required": ["prompt", "lora_id"],
+      "properties": {
+        "job_id": {
+          "type": "string",
+          "description": "AVA job ID for tracking"
+        },
+        "prompt": {
+          "type": "string",
+          "description": "Text prompt (use trigger word)",
+          "maxLength": 2000
+        },
+        "negative_prompt": {
+          "type": "string",
+          "default": ""
+        },
+        "lora_id": {
+          "type": "string",
+          "description": "LoRA ID from training"
+        },
+        "lora_s3_key": {
+          "type": "string",
+          "description": "Alternative: direct S3 key for LoRA"
+        },
+        "lora_strength": {
+          "type": "number",
+          "default": 1.0,
+          "minimum": 0.1,
+          "maximum": 2.0
+        },
+        "width": {
+          "type": "integer",
+          "default": 1024
+        },
+        "height": {
+          "type": "integer",
+          "default": 1024
+        },
+        "num_images": {
+          "type": "integer",
+          "default": 1,
+          "minimum": 1,
+          "maximum": 4
+        },
+        "seed": {
+          "type": "integer"
+        },
+        "guidance_scale": {
+          "type": "number",
+          "default": 7.5
+        },
+        "num_inference_steps": {
+          "type": "integer",
+          "default": 30
+        },
+        "callback_url": {
+          "type": "string"
+        }
+      }
+    },
+    "output": {
+      "type": "object",
+      "properties": {
+        "success": {"type": "boolean"},
+        "job_id": {"type": "string"},
+        "artifacts": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "type": {"type": "string", "enum": ["image"]},
+              "uri": {"type": "string"},
+              "s3_key": {"type": "string"},
+              "size": {"type": "integer"},
+              "width": {"type": "integer"},
+              "height": {"type": "integer"},
+              "seed": {"type": "integer"}
+            }
+          }
+        },
+        "metrics": {
+          "type": "object",
+          "properties": {
+            "lora_load_time_ms": {"type": "integer"},
+            "generation_time_ms": {"type": "integer"},
+            "upload_time_ms": {"type": "integer"},
+            "lora_cached": {"type": "boolean"}
+          }
+        },
+        "error": {
+          "type": "object",
+          "properties": {
+            "code": {"type": "string"},
+            "message": {"type": "string"},
+            "retriable": {"type": "boolean"}
+          }
+        }
+      }
+    }
+  },
+  
+  "timeout": {
+    "jobDefault": 120,
+    "jobMax": 300
+  },
+  
+  "setup_instructions": [
+    "1. Use same base as photo endpoint with LoRA support",
+    "2. Configure S3 access for LoRA downloads",
+    "3. Set up LRU cache for frequently used LoRAs",
+    "4. Copy endpoint URL to GPU_LORA_URL (or separate key)"
+  ],
+  
+  "notes": {
+    "caching": "LoRA weights are cached on worker for faster subsequent requests",
+    "base_model": "Must match the base model used for training"
+  }
+}

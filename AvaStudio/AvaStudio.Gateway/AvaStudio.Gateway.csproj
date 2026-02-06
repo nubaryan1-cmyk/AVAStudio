@@ -1,0 +1,26 @@
+﻿<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <UserSecretsId>f18c965a-b8e1-4a66-8cc6-30fb43304504</UserSecretsId>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Dapper" Version="2.1.66" />
+    <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="10.0.2" />
+    <PackageReference Include="Npgsql" Version="10.0.1" />
+    <PackageReference Include="Stripe.net" Version="50.2.0" />
+    <PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="8.15.0" />
+  </ItemGroup>
+
+  <Target Name="GatewayCanonGate" BeforeTargets="BeforeBuild" Condition="'$(CI)' == 'true'">
+    <Exec Command="powershell -NoProfile -ExecutionPolicy Bypass -File &quot;$(MSBuildProjectDirectory)\_canon_gateway_gate.ps1&quot; -GatewayDir &quot;.&quot;" />
+  </Target>
+</Project>
+
+
+
+
+

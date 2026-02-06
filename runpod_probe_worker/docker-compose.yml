@@ -1,0 +1,90 @@
+services:
+  api:
+    build: .
+    container_name: avastudio_api
+    env_file:
+      - .env
+    environment:
+      - AVA_ENV=${AVA_ENV:-STAGING}
+      - DATABASE_URL=${DATABASE_URL:-}
+    volumes:
+      - avastudio_data:/data
+      - avastudio_logs:/var/log/ava
+    ports:
+      - "8010:8010"
+    depends_on:
+      - postgres
+      - minio
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8010/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  worker:
+    build: .
+    env_file:
+      - .env
+    environment:
+      - AVA_ENV=${AVA_ENV:-STAGING}
+      - DATABASE_URL=${DATABASE_URL:-}
+    volumes:
+      - avastudio_data:/data
+      - avastudio_logs:/var/log/ava
+    command: ["python", "dist_worker.py"]
+    depends_on:
+      - postgres
+      - minio
+    restart: unless-stopped
+
+  # PostgreSQL (optional in STAGING)
+  postgres:
+    image: postgres:16-alpine
+    container_name: avastudio_postgres
+    environment:
+      - POSTGRES_USER=ava
+      - POSTGRES_PASSWORD=ava_staging_password
+      - POSTGRES_DB=ava
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ava"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    profiles:
+      - with-postgres
+
+  # MinIO (S3-compatible storage for local development)
+  minio:
+    image: minio/minio:latest
+    container_name: avastudio_minio
+    environment:
+      - MINIO_ROOT_USER=minioadmin
+      - MINIO_ROOT_PASSWORD=minioadmin
+    volumes:
+      - minio_data:/data
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    command: server /data --console-address ":9001"
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    profiles:
+      - with-minio
+
+volumes:
+  avastudio_data:
+  avastudio_logs:
+  postgres_data:
+  minio_data:
+
+

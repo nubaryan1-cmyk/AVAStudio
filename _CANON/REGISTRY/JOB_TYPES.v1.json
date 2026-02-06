@@ -1,0 +1,38 @@
+{
+  "_meta": {
+    "version": "1.0",
+    "authority": "_CANON/REGISTRY/JOB_TYPES.v1.json",
+    "status": "CANON",
+    "description": "Canonical job type registry"
+  },
+  "job_types": {
+    "photo.generate": {
+      "description": "Generate photo/image using AI models",
+      "endpoint_type": "PHOTO-GPU",
+      "payload_schema": "_CANON/SCHEMAS/payload_photo_generate.v1.schema.json",
+      "timeout_seconds": 300,
+      "retryable": true
+    },
+    "video.generate": {
+      "description": "Generate video using AI models",
+      "endpoint_type": "VIDEO-GPU",
+      "payload_schema": "_CANON/SCHEMAS/payload_video_generate.v1.schema.json",
+      "timeout_seconds": 1800,
+      "retryable": true
+    },
+    "lora.train": {
+      "description": "Train LoRA model",
+      "endpoint_type": "LORA-TRAIN",
+      "payload_schema": "_CANON/SCHEMAS/payload_lora_train.v1.schema.json",
+      "timeout_seconds": 7200,
+      "retryable": false
+    },
+    "lora.infer": {
+      "description": "Inference using trained LoRA model",
+      "endpoint_type": "PHOTO-GPU",
+      "payload_schema": "_CANON/SCHEMAS/payload_lora_infer.v1.schema.json",
+      "timeout_seconds": 300,
+      "retryable": true
+    }
+  }
+}

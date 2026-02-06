@@ -1,0 +1,71 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "_CANON/SCHEMAS/payload_lora_infer.v1.schema.json",
+  "title": "LoRA Inference Payload",
+  "description": "Canonical payload schema for lora.infer job type",
+  "type": "object",
+  "properties": {
+    "prompt": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 2000
+    },
+    "negative_prompt": {
+      "type": "string",
+      "maxLength": 1000
+    },
+    "lora_id": {
+      "type": "string",
+      "description": "ID of trained LoRA model"
+    },
+    "lora_s3_key": {
+      "type": "string",
+      "description": "S3 key of LoRA weights"
+    },
+    "lora_weight": {
+      "type": "number",
+      "minimum": 0,
+      "maximum": 1,
+      "default": 0.8
+    },
+    "base_model": {
+      "type": "string",
+      "default": "flux-dev"
+    },
+    "width": {
+      "type": "integer",
+      "minimum": 256,
+      "maximum": 2048,
+      "default": 1024
+    },
+    "height": {
+      "type": "integer",
+      "minimum": 256,
+      "maximum": 2048,
+      "default": 1024
+    },
+    "num_images": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 4,
+      "default": 1
+    },
+    "seed": {
+      "type": "integer"
+    },
+    "guidance_scale": {
+      "type": "number",
+      "minimum": 1,
+      "maximum": 20,
+      "default": 7.5
+    },
+    "num_inference_steps": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 150,
+      "default": 30
+    }
+  },
+  "required": ["prompt", "lora_id"],
+  "additionalProperties": false
+}

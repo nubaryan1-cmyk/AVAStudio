@@ -1,0 +1,7 @@
+﻿FROM pytorch/pytorch:2.1.0-cuda12.1-cudnn8-runtime
+WORKDIR /app
+# Installing video dependencies (ffmpeg, etc)
+RUN apt-get update && apt-get install -y ffmpeg
+RUN pip install --no-cache-dir imageio-ffmpeg kornia
+COPY . .
+CMD ["python", "-u", "handler.py"]

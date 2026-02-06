@@ -1,0 +1,12 @@
+﻿{
+  "name": "ava-lora-train",
+  "gpu_ids": ["ADA_48"], 
+  "containerDiskInGb": 100,
+  "min_vcpu_count": 12,
+  "min_memory_in_gb": 64,
+  "env": [
+    { "key": "TRAINER", "value": "kohya_ss" },
+    { "key": "SAVE_PRECISION", "value": "bf16" }
+  ],
+  "image_name": "avastudio/lora-train-worker:v1"
+}

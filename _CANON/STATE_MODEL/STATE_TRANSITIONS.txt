@@ -1,0 +1,25 @@
+AVA — ALLOWED STATE TRANSITIONS
+Version: 2.0 (FINAL)
+Status: LOCKED — IMMUTABLE
+Authority: OWNER DECISION (2025-01-11)
+
+TRANSITIONS:
+
+CREATED      -> VALIDATING
+VALIDATING   -> READY
+VALIDATING   -> FAILED
+READY        -> IN_QUEUE
+IN_QUEUE     -> SCHEDULED
+SCHEDULED    -> RUNNING
+
+RUNNING      -> COMPLETED
+RUNNING      -> FAILED
+RUNNING      -> TIMEOUT
+
+ANY          -> CANCELLED
+
+RULES:
+- Transitions outside this list are FORBIDDEN
+- State enforcement belongs to Job Core
+- PAUSED and RETRYING transitions are PERMANENTLY FORBIDDEN
+- This file is FINAL and IMMUTABLE — no further changes permitted

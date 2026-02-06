@@ -1,0 +1,49 @@
+# =============================================================================
+# AVA STUDIO - PRODUCTION
+# =============================================================================
+version: '3.8'
+
+services:
+  backend:
+    build:
+      context: ./runpod_probe_worker
+      dockerfile: Dockerfile
+    container_name: ava_backend_prod
+    env_file:
+      - .env.prod
+    environment:
+      AVA_ENV: PROD
+      AVA_MOCK_MODE: "0"
+    ports:
+      - "8000:8000"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    restart: always
+    deploy:
+      resources:
+        limits:
+          cpus: '2'
+          memory: 2G
+
+  worker:
+    build:
+      context: ./runpod_probe_worker
+      dockerfile: Dockerfile
+    container_name: ava_worker_prod
+    env_file:
+      - .env.prod
+    environment:
+      AVA_ENV: PROD
+      AVA_MOCK_MODE: "0"
+    command: ["python", "dist_worker.py"]
+    depends_on:
+      - backend
+    restart: always
+    deploy:
+      resources:
+        limits:
+          cpus: '1'
+          memory: 1G
