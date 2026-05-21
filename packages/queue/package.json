@@ -12,6 +12,7 @@
     "typecheck": "tsc --noEmit"
   },
   "devDependencies": {
-    "typescript": "5.4.5"
+    "typescript": "5.4.5",
+    "@avastudio/config": "workspace:*"
   }
 }

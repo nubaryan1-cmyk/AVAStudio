@@ -27,6 +27,9 @@ importers:
         specifier: 18.3.1
         version: 18.3.1(react@18.3.1)
     devDependencies:
+      '@avastudio/config':
+        specifier: workspace:*
+        version: link:../../packages/config
       '@types/node':
         specifier: 20.16.11
         version: 20.16.11
@@ -51,6 +54,9 @@ importers:
 
   apps/worker:
     devDependencies:
+      '@avastudio/config':
+        specifier: workspace:*
+        version: link:../../packages/config
       '@types/node':
         specifier: 20.16.11
         version: 20.16.11
@@ -69,24 +75,36 @@ importers:
 
   packages/db:
     devDependencies:
+      '@avastudio/config':
+        specifier: workspace:*
+        version: link:../config
       typescript:
         specifier: 5.4.5
         version: 5.4.5
 
   packages/queue:
     devDependencies:
+      '@avastudio/config':
+        specifier: workspace:*
+        version: link:../config
       typescript:
         specifier: 5.4.5
         version: 5.4.5
 
   packages/shared:
     devDependencies:
+      '@avastudio/config':
+        specifier: workspace:*
+        version: link:../config
       typescript:
         specifier: 5.4.5
         version: 5.4.5
 
   packages/ui:
     devDependencies:
+      '@avastudio/config':
+        specifier: workspace:*
+        version: link:../config
       typescript:
         specifier: 5.4.5
         version: 5.4.5
