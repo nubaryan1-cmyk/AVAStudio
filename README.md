@@ -6,6 +6,7 @@
 Монорепо: Turborepo + pnpm. Полный план разработки — в "Карта проекта".
 
 ## Старт (локально)
+
 ```bash
 pnpm install
 pnpm dev        # web на http://localhost:3000 + worker
@@ -14,6 +15,7 @@ pnpm typecheck  # проверка типов
 ```
 
 ## Структура
+
 - `apps/web` — Next.js 14 (App Router, TypeScript, Tailwind)
 - `apps/worker` — Node-воркер (FFmpeg / постинг — добавляется на следующих этапах)
 - `packages/db` — Drizzle ORM + миграции

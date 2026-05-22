@@ -9,12 +9,27 @@
     ".": "./src/index.ts",
     "./typescript/base.json": "./typescript/base.json",
     "./typescript/nextjs.json": "./typescript/nextjs.json",
-    "./typescript/node.json": "./typescript/node.json"
+    "./typescript/node.json": "./typescript/node.json",
+    "./eslint/base": "./eslint/base.mjs",
+    "./eslint/node": "./eslint/node.mjs",
+    "./eslint/next": "./eslint/next.mjs",
+    "./eslint/root": "./eslint/root.mjs",
+    "./prettier": "./prettier/index.json"
   },
   "scripts": {
+    "lint": "eslint .",
     "typecheck": "tsc --noEmit"
   },
+  "dependencies": {
+    "@eslint/js": "9.12.0",
+    "@next/eslint-plugin-next": "15.5.18",
+    "eslint-config-prettier": "9.1.0",
+    "eslint-plugin-import": "2.31.0",
+    "globals": "15.11.0",
+    "typescript-eslint": "8.8.1"
+  },
   "devDependencies": {
+    "eslint": "9.12.0",
     "typescript": "5.4.5"
   }
 }
