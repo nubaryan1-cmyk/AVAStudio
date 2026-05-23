@@ -1,2 +1,2 @@
-// @avastudio/db — наполняется на соответствующих этапах карты проекта.
-export const PACKAGE_NAME = "@avastudio/db";
+export * from "./schema/index.js";
+export { createDb, type Database } from "./client.js";

@@ -1,2 +1,6 @@
-// @avastudio/shared — наполняется на соответствующих этапах карты проекта.
-export const PACKAGE_NAME = "@avastudio/shared";
+// Публичный API пакета @avastudio/shared.
+export * from "./env/index.js";
+export * from "./credentials/index.js";
+export * from "./credentials/rotate.js";
+export * from "./logger/redact.js";
+export * from "./utils/example.js";
