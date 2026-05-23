@@ -20,5 +20,8 @@
     "@vitest/coverage-v8": "2.1.4",
     "msw": "2.4.11",
     "vitest": "2.1.4"
+  },
+  "dependencies": {
+    "zod": "3.23.8"
   }
 }

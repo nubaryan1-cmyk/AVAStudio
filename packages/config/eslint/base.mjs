@@ -21,6 +21,7 @@ export default [
     files: ["**/*.{ts,tsx}"],
     plugins: { import: importPlugin },
     rules: {
+      "no-process-env": "error",
       "@typescript-eslint/no-explicit-any": "error",
       "@typescript-eslint/no-unused-vars": [
         "error",
@@ -48,6 +49,11 @@ export default [
         },
       ],
     },
+  },
+  {
+    // Единственное место, где разрешён прямой доступ к process.env — модуль env.
+    files: ["**/src/env/**/*.{ts,tsx}"],
+    rules: { "no-process-env": "off" },
   },
   prettier,
 ];
