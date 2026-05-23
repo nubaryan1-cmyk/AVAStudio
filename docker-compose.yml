@@ -1,0 +1,36 @@
+# Локальная инфраструктура для разработки AVAStudio (Фаза 1).
+# Postgres поднимается командой: pnpm db:up
+services:
+  postgres:
+    image: postgres:15-alpine
+    container_name: avastudio-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: avastudio
+      POSTGRES_PASSWORD: avastudio
+      POSTGRES_DB: avastudio
+    ports:
+      - "5432:5432"
+    volumes:
+      - avastudio-pgdata:/var/lib/postgresql/data
+      - ./db/init:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U avastudio -d avastudio"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  # Веб-UI для БД (опционально): pnpm db:up:tools
+  adminer:
+    image: adminer:4
+    container_name: avastudio-adminer
+    restart: unless-stopped
+    ports:
+      - "8080:8080"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    profiles: ["tools"]
+
+volumes:
+  avastudio-pgdata:

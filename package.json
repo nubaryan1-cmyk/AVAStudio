@@ -17,7 +17,12 @@
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "lint:fix": "turbo lint -- --fix",
-    "prepare": "husky"
+    "prepare": "husky",
+    "db:up": "docker compose up -d postgres",
+    "db:up:tools": "docker compose --profile tools up -d",
+    "db:down": "docker compose down",
+    "db:logs": "docker compose logs -f postgres",
+    "db:reset": "docker compose down -v && docker compose up -d postgres"
   },
   "devDependencies": {
     "turbo": "2.1.3",
