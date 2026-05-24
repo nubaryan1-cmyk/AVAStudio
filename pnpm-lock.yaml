@@ -141,7 +141,7 @@ importers:
         version: link:../shared
       drizzle-orm:
         specifier: 0.45.2
-        version: 0.45.2(postgres@3.4.9)
+        version: 0.45.2(@electric-sql/pglite@0.4.5)(postgres@3.4.9)
       postgres:
         specifier: 3.4.9
         version: 3.4.9
@@ -149,9 +149,15 @@ importers:
       '@avastudio/config':
         specifier: workspace:*
         version: link:../config
+      '@electric-sql/pglite':
+        specifier: 0.4.5
+        version: 0.4.5
       '@types/node':
         specifier: 20.16.11
         version: 20.16.11
+      '@vitest/coverage-v8':
+        specifier: 2.1.4
+        version: 2.1.4(vitest@2.1.4(@types/node@20.16.11)(jsdom@25.0.1)(msw@2.4.11(typescript@5.4.5)))
       drizzle-kit:
         specifier: 0.31.10
         version: 0.31.10
@@ -164,6 +170,9 @@ importers:
       typescript:
         specifier: 5.4.5
         version: 5.4.5
+      vitest:
+        specifier: 2.1.4
+        version: 2.1.4(@types/node@20.16.11)(jsdom@25.0.1)(msw@2.4.11(typescript@5.4.5))
 
   packages/queue:
     devDependencies:
@@ -365,6 +374,9 @@ packages:
 
   '@drizzle-team/brocli@0.10.2':
     resolution: {integrity: sha512-z33Il7l5dKjUgGULTqBsQBQwckHh5AbIuxhdsIxDDiZAzBOrZO6q9ogcWC65kU382AfynTfgNumVcNIjuIua6w==}
+
+  '@electric-sql/pglite@0.4.5':
+    resolution: {integrity: sha512-aGG2zGEyZzGWKy8P+9ZoNUV0jxt1+hgbeTf+bVAYyxVZZLXg3/9aFlfLxb08AYZVAfAkQlQIysmWjhc5hwDG8g==}
 
   '@esbuild-kit/core-utils@3.3.2':
     resolution: {integrity: sha512-sPRAnw9CdSsRmEtnsl2WXWdyquogVpB3yZ3dgwJfe8zrOzTsV7cJvmwrKVa+0ma5BoiGJ+BoqkMvawbayKUsqQ==}
@@ -3995,6 +4007,8 @@ snapshots:
 
   '@drizzle-team/brocli@0.10.2': {}
 
+  '@electric-sql/pglite@0.4.5': {}
+
   '@esbuild-kit/core-utils@3.3.2':
     dependencies:
       esbuild: 0.18.20
@@ -5217,8 +5231,9 @@ snapshots:
       esbuild: 0.25.12
       tsx: 4.22.3
 
-  drizzle-orm@0.45.2(postgres@3.4.9):
+  drizzle-orm@0.45.2(@electric-sql/pglite@0.4.5)(postgres@3.4.9):
     optionalDependencies:
+      '@electric-sql/pglite': 0.4.5
       postgres: 3.4.9
 
   dunder-proto@1.0.1:
