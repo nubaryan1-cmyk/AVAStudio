@@ -2,14 +2,8 @@ import { env } from "@avastudio/shared";
 import { eq, inArray } from "drizzle-orm";
 
 import { createDb } from "./client.js";
-import {
-  mediaAssets,
-  orgMembers,
-  organizations,
-  socialAccounts,
-  subscriptions,
-  users,
-} from "./schema/index.js";
+import { createSocialAccount } from "./repositories/social-accounts.js";
+import { mediaAssets, orgMembers, organizations, subscriptions, users } from "./schema/index.js";
 
 // Детерминированные id для идемпотентности seed.
 const OWNER_ID = "00000000-0000-4000-8000-000000000001";
@@ -41,12 +35,15 @@ async function main(): Promise<void> {
     { orgId: ORG_ID, userId: EDITOR_ID, role: "editor" },
   ]);
 
-  // credentialsEncrypted остаётся null — шифрование подключается в TASK 3.5.
-  await db.insert(socialAccounts).values([
-    { orgId: ORG_ID, platform: "instagram", username: "seed_ig" },
-    { orgId: ORG_ID, platform: "tiktok", username: "seed_tt" },
-    { orgId: ORG_ID, platform: "reddit", username: "seed_rd" },
-  ]);
+  // Аккаунты создаём через репозиторий — креды шифруются DEK организации (envelope).
+  await createSocialAccount(db, {
+    orgId: ORG_ID,
+    platform: "instagram",
+    username: "seed_ig",
+    credentials: { password: "demo-password", cookies: [{ name: "sessionid", value: "demo" }] },
+  });
+  await createSocialAccount(db, { orgId: ORG_ID, platform: "tiktok", username: "seed_tt" });
+  await createSocialAccount(db, { orgId: ORG_ID, platform: "reddit", username: "seed_rd" });
 
   await db.insert(mediaAssets).values([
     { orgId: ORG_ID, type: "video", storagePath: "seed/clip1.mp4", durationSec: 15 },
