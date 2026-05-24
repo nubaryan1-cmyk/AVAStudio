@@ -22,7 +22,11 @@
     "db:up:tools": "docker compose --profile tools up -d",
     "db:down": "docker compose down",
     "db:logs": "docker compose logs -f postgres",
-    "db:reset": "docker compose down -v && docker compose up -d postgres"
+    "db:reset": "docker compose down -v && docker compose up -d postgres",
+    "db:generate": "pnpm --filter @avastudio/db db:generate",
+    "db:migrate": "pnpm --filter @avastudio/db db:migrate",
+    "db:studio": "pnpm --filter @avastudio/db db:studio",
+    "db:seed": "pnpm --filter @avastudio/db db:seed"
   },
   "devDependencies": {
     "turbo": "2.1.3",
