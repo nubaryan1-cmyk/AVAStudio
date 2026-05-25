@@ -20,6 +20,21 @@ services:
       timeout: 5s
       retries: 10
 
+  redis:
+    image: redis:7-alpine
+    container_name: avastudio-redis
+    restart: unless-stopped
+    command: ["redis-server", "--appendonly", "yes"]
+    ports:
+      - "6379:6379"
+    volumes:
+      - avastudio-redisdata:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
   # Веб-UI для БД (опционально): pnpm db:up:tools
   adminer:
     image: adminer:4
@@ -34,3 +49,4 @@ services:
 
 volumes:
   avastudio-pgdata:
+  avastudio-redisdata:

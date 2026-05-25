@@ -26,7 +26,10 @@
     "db:generate": "pnpm --filter @avastudio/db db:generate",
     "db:migrate": "pnpm --filter @avastudio/db db:migrate",
     "db:studio": "pnpm --filter @avastudio/db db:studio",
-    "db:seed": "pnpm --filter @avastudio/db db:seed"
+    "db:seed": "pnpm --filter @avastudio/db db:seed",
+    "redis:up": "docker compose up -d redis",
+    "redis:down": "docker compose stop redis",
+    "infra:up": "docker compose up -d postgres redis"
   },
   "devDependencies": {
     "turbo": "2.1.3",
