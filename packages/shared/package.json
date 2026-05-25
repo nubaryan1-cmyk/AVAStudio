@@ -25,6 +25,9 @@
   },
   "dependencies": {
     "zod": "3.23.8",
-    "@noble/ciphers": "2.2.0"
+    "@noble/ciphers": "2.2.0",
+    "uuid": "14.0.0",
+    "date-fns": "4.3.0",
+    "date-fns-tz": "3.2.0"
   }
 }
