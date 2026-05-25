@@ -2,6 +2,7 @@ import { validationErrorFromZod } from "@avastudio/shared";
 import { Queue, type JobsOptions } from "bullmq";
 
 import { getRedisConnection } from "../connection.js";
+import { buildJobId } from "../idempotency.js";
 
 import { DEFAULT_JOB_OPTIONS, jobSchemas, type JobData, type QueueName } from "./definitions.js";
 
@@ -36,7 +37,8 @@ export async function enqueue<Q extends QueueName>(
   options?: JobsOptions,
 ) {
   const validated = validateJobData(name, data);
-  return getQueue(name).add(name, validated, options);
+  const jobId = options?.jobId ?? buildJobId(name, validated);
+  return getQueue(name).add(name, validated, { ...options, jobId });
 }
 
 /** Закрывает все созданные очереди (graceful shutdown). */
