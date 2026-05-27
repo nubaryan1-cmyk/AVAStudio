@@ -22,6 +22,10 @@ export const serverEnvSchema = z.object({
     ),
   CREDENTIALS_ENCRYPTION_KEY_PREV: z.string().regex(BASE64_32_BYTES).optional(),
 
+  // Пути к бинарям FFmpeg (по умолчанию системные ffmpeg/ffprobe)
+  FFMPEG_PATH: z.string().optional(),
+  FFPROBE_PATH: z.string().optional(),
+
   // --- Плейсхолдеры будущих интеграций (опциональны до подключения в Фазе 2) ---
   STRIPE_SECRET_KEY: z.string().optional(),
   CRYPTO_PROVIDER_API_KEY: z.string().optional(),
