@@ -12,7 +12,8 @@
     "typecheck": "tsc --noEmit",
     "lint": "eslint .",
     "queue:smoke": "tsx --env-file=../../.env src/smoke.ts",
-    "test": "vitest run"
+    "test": "vitest run",
+    "queue:board": "tsx --env-file=../../.env src/bullboard.run.ts"
   },
   "devDependencies": {
     "typescript": "5.4.5",
@@ -21,12 +22,16 @@
     "@types/node": "20.16.11",
     "tsx": "4.19.1",
     "@vitest/coverage-v8": "2.1.4",
-    "vitest": "2.1.4"
+    "vitest": "2.1.4",
+    "@types/express": "5.0.6"
   },
   "dependencies": {
     "@avastudio/shared": "workspace:*",
     "bullmq": "5.77.3",
     "ioredis": "5.10.1",
-    "zod": "3.23.8"
+    "zod": "3.23.8",
+    "@bull-board/api": "7.1.5",
+    "@bull-board/express": "7.1.5",
+    "express": "5.2.1"
   }
 }
