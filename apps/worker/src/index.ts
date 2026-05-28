@@ -1,20 +1,25 @@
-import { closeAllQueues, closeRedisConnection } from "@avastudio/queue";
+import { closeAllQueues, closeRedisConnection, getRedisConnection } from "@avastudio/queue";
 import { createLogger } from "@avastudio/shared";
 
 import { loadWorkerConfig } from "./config.js";
+import { startHealthServer } from "./health.js";
+import { installGracefulShutdown } from "./shutdown.js";
 import { startWorkers } from "./worker.js";
 
-const config = loadWorkerConfig();
-const logger = createLogger({ level: config.nodeEnv === "production" ? "info" : "debug" });
-const workers = startWorkers(config, logger);
-
-// Минимальная остановка для dev. Полный graceful shutdown — TASK 7.2.
-async function stop(): Promise<void> {
-  logger.info("остановка worker'а");
-  await Promise.all(workers.map((w) => w.close()));
-  await closeAllQueues();
-  await closeRedisConnection();
-  process.exit(0);
+async function main(): Promise<void> {
+  const config = loadWorkerConfig();
+  const logger = createLogger({ level: config.nodeEnv === "production" ? "info" : "debug" });
+  const workers = startWorkers(config, logger);
+  const healthServer = await startHealthServer({ port: 4001, redis: getRedisConnection(), logger });
+  installGracefulShutdown({
+    workers,
+    healthServer,
+    closeConnections: async () => {
+      await closeAllQueues();
+      await closeRedisConnection();
+    },
+    logger,
+  });
 }
-process.on("SIGTERM", () => void stop());
-process.on("SIGINT", () => void stop());
+
+void main();
