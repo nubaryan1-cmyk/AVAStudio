@@ -28,6 +28,7 @@
     "@noble/ciphers": "2.2.0",
     "uuid": "14.0.0",
     "date-fns": "4.3.0",
-    "date-fns-tz": "3.2.0"
+    "date-fns-tz": "3.2.0",
+    "pino": "10.3.1"
   }
 }

@@ -26,6 +26,9 @@ export const serverEnvSchema = z.object({
   FFMPEG_PATH: z.string().optional(),
   FFPROBE_PATH: z.string().optional(),
 
+  // Конфиг воркера
+  WORKER_CONCURRENCY: z.coerce.number().int().min(1).optional(),
+
   // --- Плейсхолдеры будущих интеграций (опциональны до подключения в Фазе 2) ---
   STRIPE_SECRET_KEY: z.string().optional(),
   CRYPTO_PROVIDER_API_KEY: z.string().optional(),
