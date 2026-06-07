@@ -22,6 +22,7 @@ RUN pnpm --filter=@avastudio/worker deploy --prod --legacy /app
 
 # ---------- ffmpeg (static, BtbN — лицензионно как ЭТАП 6.1) ----------
 FROM base AS ffmpeg
+RUN apt-get update && apt-get install -y --no-install-recommends xz-utils && rm -rf /var/lib/apt/lists/*
 ADD https://github.com/BtbN/FFmpeg-Builds/releases/download/latest/ffmpeg-master-latest-linux64-gpl.tar.xz /tmp/ffmpeg.tar.xz
 RUN mkdir -p /opt/ffmpeg && tar -xf /tmp/ffmpeg.tar.xz -C /opt/ffmpeg --strip-components=1
 
