@@ -25,9 +25,10 @@ export async function POST(req: Request): Promise<NextResponse> {
       secret,
       ...(req.headers.get("x-forwarded-for") ? { remoteIp: req.headers.get("x-forwarded-for") as string } : {}),
     },
-    // Требовать CAPTCHA только в проде; в dev без секрета — пропуск.
-    // eslint-disable-next-line no-process-env
-    process.env.NODE_ENV === "production",
+    // CAPTCHA обязательна только когда реально настроен ключ Turnstile.
+    // Пока ключа нет (TURNSTILE_SECRET_KEY не задан) — регистрация работает без капчи;
+    // как только ключ появится в Doppler/Vercel, проверка включится автоматически.
+    Boolean(secret),
   );
   if (!captchaOk) {
     return NextResponse.json({ ok: false, error: "Проверка CAPTCHA не пройдена" }, { status: 400 });
@@ -44,7 +45,4 @@ export async function POST(req: Request): Promise<NextResponse> {
     });
     return res;
   } catch (err) {
-    const message = err instanceof AppError ? err.userMessage : "Не удалось зарегистрироваться";
-    return NextResponse.json({ ok: false, error: message }, { status: 400 });
-  }
-}
+  
