@@ -2,7 +2,7 @@
   "name": "avastudio",
   "version": "0.0.0",
   "private": true,
-  "packageManager": "pnpm@9.15.9",
+  "packageManager": "pnpm@10.34.1",
   "engines": {
     "node": ">=20.0.0",
     "pnpm": ">=9.0.0"
