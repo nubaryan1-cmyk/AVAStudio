@@ -13,6 +13,7 @@ describe("health endpoints (Hono)", () => {
       port: 0,
       redis: { ping: () => Promise.resolve("PONG") },
       logger: silent,
+      metricsText: () => "# HELP avastudio_queue_depth depth\navastudio_queue_depth{queue=\"render-video\"} 0\n",
     });
     base = `http://127.0.0.1:${server.port}`;
   });
@@ -27,10 +28,29 @@ describe("health endpoints (Hono)", () => {
     expect(j.status).toBe("ok");
   });
 
-  it("/metrics → 200 (заглушка)", async () => {
+  it("/metrics → 200, отдаёт текст Prometheus из провайдера (TASK 8.4)", async () => {
     const r = await fetch(`${base}/metrics`);
     expect(r.status).toBe(200);
-    expect(await r.text()).toContain("placeholder");
+    expect(await r.text()).toContain("avastudio_queue_depth");
+  });
+});
+
+describe("/metrics без провайдера → валидный комментарий", () => {
+  let server: HealthServer;
+  beforeAll(async () => {
+    server = await startHealthServer({
+      port: 0,
+      redis: { ping: () => Promise.resolve("PONG") },
+      logger: silent,
+    });
+  });
+  afterAll(async () => {
+    await server.close();
+  });
+  it("отдаёт 200 и комментарий", async () => {
+    const r = await fetch(`http://127.0.0.1:${server.port}/metrics`);
+    expect(r.status).toBe(200);
+    expect(await r.text()).toContain("# no metrics provider");
   });
 });
 

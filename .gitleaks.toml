@@ -1,0 +1,20 @@
+# Gitleaks конфиг AVAStudio (ЭТАП 15.3).
+# Базируется на стандартных правилах gitleaks (extend.useDefault) + наши allowlist.
+title = "AVAStudio Gitleaks Config"
+
+[extend]
+useDefault = true
+
+[allowlist]
+description = "Допустимые исключения: примеры, фикстуры, тестовые плейсхолдеры."
+paths = [
+  '''\.env\.example$''',
+  '''(^|/)__tests__/''',
+  '''(^|/).*\.test\.ts$''',
+  '''(^|/)test-fixtures/''',
+]
+# Плейсхолдер-фикстуры (не реальные секреты): silent WAV / 1x1 PNG в mock AI-драйверах.
+regexes = [
+  '''data:image/png;base64,iVBORw0KGgo''',
+  '''dev-insecure-jwt-secret-change-me-please''',
+]

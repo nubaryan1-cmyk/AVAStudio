@@ -7,7 +7,29 @@
   "types": "./src/index.ts",
   "exports": {
     ".": "./src/index.ts",
-    "./domain": "./src/domain/index.ts"
+    "./domain": "./src/domain/index.ts",
+    "./resilience": "./src/resilience/index.ts",
+    "./telemetry": "./src/telemetry/index.ts",
+    "./payments": "./src/payments/index.ts",
+    "./billing": "./src/billing/index.ts",
+    "./credentials": "./src/credentials/index.ts",
+    "./auth": "./src/auth/index.ts",
+    "./ai": "./src/ai/index.ts",
+    "./social": "./src/social/index.ts",
+    "./phones": "./src/phones/index.ts",
+    "./proxies": "./src/proxies/index.ts",
+    "./auth/edge": "./src/auth/edge.ts",
+    "./social/types": "./src/social/types.ts",
+    "./email": "./src/email/index.ts",
+    "./ratelimit": "./src/ratelimit/index.ts",
+    "./captcha": "./src/captcha/turnstile.ts",
+    "./audit": "./src/audit/index.ts",
+    "./observability": "./src/observability/index.ts",
+    "./cache": "./src/cache/index.ts",
+    "./analytics": "./src/analytics/clickhouse.ts",
+    "./risk": "./src/risk/index.ts",
+    "./economics": "./src/economics/index.ts",
+    "./growth": "./src/growth/index.ts"
   },
   "scripts": {
     "typecheck": "tsc --noEmit",
@@ -15,20 +37,37 @@
     "test": "vitest run --coverage"
   },
   "devDependencies": {
-    "typescript": "5.4.5",
     "@avastudio/config": "workspace:*",
-    "eslint": "9.12.0",
+    "@opentelemetry/context-async-hooks": "2.7.1",
+    "@types/node": "20.16.11",
+    "@types/qrcode": "1.5.5",
     "@vitest/coverage-v8": "2.1.4",
+    "eslint": "9.12.0",
     "msw": "2.4.11",
-    "vitest": "2.1.4",
-    "@types/node": "20.16.11"
+    "typescript": "5.4.5",
+    "vitest": "2.1.4"
   },
   "dependencies": {
-    "zod": "3.23.8",
     "@noble/ciphers": "2.2.0",
-    "uuid": "14.0.0",
+    "@opentelemetry/api": "1.9.1",
+    "@opentelemetry/core": "2.7.1",
+    "@opentelemetry/exporter-trace-otlp-http": "0.218.0",
+    "@opentelemetry/instrumentation-http": "0.218.0",
+    "@opentelemetry/instrumentation-pg": "0.70.0",
+    "@opentelemetry/instrumentation-pino": "0.64.0",
+    "@opentelemetry/resources": "2.7.1",
+    "@opentelemetry/sdk-node": "0.218.0",
+    "@opentelemetry/sdk-trace-base": "2.7.1",
+    "@opentelemetry/semantic-conventions": "1.41.1",
+    "@supabase/supabase-js": "^2.107.0",
+    "bcryptjs": "3.0.3",
+    "cockatiel": "3.2.1",
     "date-fns": "4.3.0",
     "date-fns-tz": "3.2.0",
-    "pino": "10.3.1"
+    "otplib": "13.4.1",
+    "pino": "10.3.1",
+    "qrcode": "1.5.4",
+    "uuid": "14.0.0",
+    "zod": "3.23.8"
   }
 }

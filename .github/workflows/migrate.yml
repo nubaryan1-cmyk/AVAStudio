@@ -1,0 +1,49 @@
+name: DB Migrate
+
+# Ручной запуск миграций по окружениям (Supabase, ЭТАП 16.2).
+# Секреты приходят из Doppler через DOPPLER_TOKEN окружения.
+on:
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: "Целевое окружение"
+        required: true
+        default: dev
+        type: choice
+        options: [dev, staging, prod]
+
+permissions:
+  contents: read
+
+jobs:
+  migrate:
+    name: drizzle-kit migrate (${{ inputs.environment }})
+    runs-on: ubuntu-latest
+    # prod требует ручного approve через GitHub Environment protection rules.
+    environment: ${{ inputs.environment }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+
+      - name: Install deps
+        run: pnpm install --frozen-lockfile
+
+      - name: Install Doppler CLI
+        uses: dopplerhq/cli-action@v3
+
+      - name: Run migrations (direct connection)
+        env:
+          DOPPLER_TOKEN: ${{ secrets.DOPPLER_TOKEN }}
+        # Миграции идут по DIRECT строке (pooled не поддерживает DDL-сессии).
+        run: |
+          doppler run --config ${{ inputs.environment }} -- \
+            sh -c 'DATABASE_URL="$DATABASE_URL_DIRECT" pnpm db:migrate'

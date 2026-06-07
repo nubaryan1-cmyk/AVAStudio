@@ -1,11 +1,13 @@
+import preset from "@avastudio/ui/tailwind-preset";
+
 import type { Config } from "tailwindcss";
 
 const config: Config = {
-  content: ["./src/**/*.{ts,tsx}"],
-  theme: {
-    extend: {},
-  },
-  plugins: [],
+  presets: [preset],
+  content: [
+    "./src/**/*.{ts,tsx}",
+    "../../packages/ui/src/**/*.{ts,tsx}",
+  ],
 };
 
 export default config;

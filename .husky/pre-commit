@@ -1,1 +1,7 @@
 pnpm exec lint-staged
+
+# Secret scan перед коммитом (ЭТАП 15.3). Если gitleaks установлен — сканируем
+# staged-изменения; иначе тихо пропускаем (CI-скан остаётся обязательным гейтом).
+if command -v gitleaks >/dev/null 2>&1; then
+  gitleaks protect --staged --redact --config .gitleaks.toml
+fi

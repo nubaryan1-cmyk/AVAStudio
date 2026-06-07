@@ -40,7 +40,7 @@ async function main(): Promise<void> {
     orgId: ORG_ID,
     platform: "instagram",
     username: "seed_ig",
-    credentials: { password: "demo-password", cookies: [{ name: "sessionid", value: "demo" }] },
+    credentials: { password: process.env.SEED_IG_PASSWORD ?? "REPLACE_ME_demo_only", cookies: [{ name: "sessionid", value: process.env.SEED_IG_COOKIE ?? "REPLACE_ME_demo_only" }] },
   });
   await createSocialAccount(db, { orgId: ORG_ID, platform: "tiktok", username: "seed_tt" });
   await createSocialAccount(db, { orgId: ORG_ID, platform: "reddit", username: "seed_rd" });

@@ -13,6 +13,8 @@ export const serverEnvSchema = z.object({
 
   // --- Обязательные (ядро) ---
   DATABASE_URL: z.string().url("DATABASE_URL должен быть валидным URL подключения к Postgres"),
+  // Прямое подключение (порт 5432) — только для миграций; приложение ходит через pooled DATABASE_URL.
+  DATABASE_URL_DIRECT: z.string().url().optional(),
   REDIS_URL: z.string().url("REDIS_URL должен быть валидным URL подключения к Redis"),
   CREDENTIALS_ENCRYPTION_KEY: z
     .string()
@@ -29,14 +31,68 @@ export const serverEnvSchema = z.object({
   // Конфиг воркера
   WORKER_CONCURRENCY: z.coerce.number().int().min(1).optional(),
 
+  // --- Трейсинг (OpenTelemetry → Jaeger, локально; TASK 8.2) ---
+  // OTLP/HTTP endpoint Jaeger (по умолчанию http://localhost:4318 в коде).
+  OTEL_EXPORTER_OTLP_ENDPOINT: z.string().url().optional(),
+  // Включение трейсинга: "true"/"false". По умолчанию выключен (CI/тесты без Jaeger).
+  OTEL_TRACES_ENABLED: z.enum(["true", "false"]).optional(),
+
+  // --- Платежи (Фаза 1: test/stub; реальные ключи — Фаза 2 / ЭТАП 19) ---
+  // Активный провайдер по умолчанию (реестр выбирает драйвер по имени).
+  PAYMENT_PROVIDER: z.enum(["stripe", "paddle", "lemonsqueezy", "crypto"]).optional(),
   // --- Плейсхолдеры будущих интеграций (опциональны до подключения в Фазе 2) ---
   STRIPE_SECRET_KEY: z.string().optional(),
+  // Секрет вебхука Stripe (test mode — whsec_...); нужен драйверу карт для проверки подписи.
+  STRIPE_WEBHOOK_SECRET: z.string().optional(),
   CRYPTO_PROVIDER_API_KEY: z.string().optional(),
+  // --- Биллинг: маппинг план↔price (Фаза 2 / ЭТАП 19) ---
+  STRIPE_PRICE_PRO: z.string().optional(),
+  STRIPE_PRICE_STUDIO: z.string().optional(),
+  STRIPE_PRICE_TEAM: z.string().optional(),
+  STRIPE_PRICE_AGENCY: z.string().optional(),
+  STRIPE_PRICE_ENTERPRISE: z.string().optional(),
+  CRYPTO_PLAN_PRO: z.string().optional(),
+  CRYPTO_PLAN_STUDIO: z.string().optional(),
+  CRYPTO_SUPPORTED_COINS: z.string().optional(),
+  CRYPTO_CONFIRMATIONS: z.string().optional(),
+  // --- Email (Resend, ЭТАП 19.5) ---
+  RESEND_API_KEY: z.string().optional(),
+  EMAIL_FROM: z.string().optional(),
+  // --- Google Cloud / OAuth (Фаза 2 / ЭТАП 20) ---
+  GOOGLE_OAUTH_CLIENT_ID: z.string().optional(),
+  GOOGLE_OAUTH_CLIENT_SECRET: z.string().optional(),
+  GOOGLE_OAUTH_REDIRECT_URI: z.string().url().optional(),
+  GEMINI_API_KEY: z.string().optional(),
+
+
+  // Секрет вебхука крипто-провайдера (IPN secret) — для проверки подписи в драйвере крипто.
+  CRYPTO_WEBHOOK_SECRET: z.string().optional(),
   OPENAI_API_KEY: z.string().optional(),
   ANTHROPIC_API_KEY: z.string().optional(),
   REPLICATE_API_TOKEN: z.string().optional(),
+  // --- AI-провайдеры реальные (Фаза 2 / ЭТАП 21) ---
+  RUNWAY_API_KEY: z.string().optional(),
+  LUMA_API_KEY: z.string().optional(),
+  ELEVENLABS_API_KEY: z.string().optional(),
+  CARTESIA_API_KEY: z.string().optional(),
+  SUNO_API_KEY: z.string().optional(),
+  UDIO_API_KEY: z.string().optional(),
+
+  // --- Supabase (Фаза 2 / ЭТАП 16) ---
+  SUPABASE_URL: z.string().url().optional(),
+  SUPABASE_ANON_KEY: z.string().optional(),
+  SUPABASE_SERVICE_ROLE_KEY: z.string().optional(),
+  AUTH_PROVIDER: z.enum(["local", "supabase"]).optional(),
   DUOPLUS_API_KEY: z.string().optional(),
+  GEELARK_API_KEY: z.string().optional(),
+  PHONE_PROVIDER_PRIORITY: z.string().optional(),
   PROXY_PROVIDER_API_KEY: z.string().optional(),
+  // --- Прокси (residential, ЭТАП 22.3) ---
+  BRIGHTDATA_USERNAME: z.string().optional(),
+  BRIGHTDATA_PASSWORD: z.string().optional(),
+  IPROYAL_USERNAME: z.string().optional(),
+  IPROYAL_PASSWORD: z.string().optional(),
+  PROXY_PROVIDER_PRIORITY: z.string().optional(),
 });
 
 export type ServerEnv = z.infer<typeof serverEnvSchema>;

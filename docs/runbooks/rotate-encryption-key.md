@@ -42,3 +42,24 @@
 
 - Потеря KEK без бэкапа = потеря данных. KEK бэкапится отдельно от БД (ЭТАП 15).
 - Расшифрованные DEK/данные не логировать и не сохранять (см. `logger/redact.ts`).
+
+## Плановая ротация (ЭТАП 15.3)
+
+Ротировать `CREDENTIALS_ENCRYPTION_KEY` по расписанию — раз в 90 дней (quarterly).
+Механизм `keyVersion` (выше) делает ротацию безболезненной, поэтому её можно
+проводить регулярно, не дожидаясь инцидента.
+
+- Поставить повторяющееся напоминание (календарь команды или scheduled-задача)
+  каждые 90 дней: «провести ротацию KEK по этому runbook».
+- Те же шаги применимы к `AUTH_JWT_SECRET` (ротация инвалидирует активные сессии —
+  планировать на окно с низким трафиком; поддержка `_PREV` для JWT — отдельная задача,
+  если потребуется бесшовность).
+- После каждой ротации — зафиксировать дату и `CURRENT_KEY_VERSION` в журнале операций.
+
+## Secret scanning (ЭТАП 15.3)
+
+- CI: workflow `.github/workflows/secret-scan.yml` (Gitleaks) — обязательный гейт на PR.
+- Локально: `.husky/pre-commit` запускает `gitleaks protect --staged`, если gitleaks
+  установлен (`brew install gitleaks` / `scoop install gitleaks`).
+- Включить в настройках GitHub-репозитория: **Secret scanning** и **Push protection**
+  (Settings → Code security and analysis).

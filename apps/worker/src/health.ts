@@ -18,9 +18,11 @@ export interface HealthServerOptions {
   redis: HealthRedis;
   logger: Logger;
   pingTimeoutMs?: number;
+  /** Провайдер текста метрик Prometheus для /metrics (TASK 8.4). */
+  metricsText?: () => Promise<string> | string;
 }
 
-/** Стартует Hono-сервер с /health и /metrics (заглушка). */
+/** Стартует Hono-сервер с /health и /metrics (Prometheus). */
 export function startHealthServer(options: HealthServerOptions): Promise<HealthServer> {
   const app = new Hono();
 
@@ -43,8 +45,21 @@ export function startHealthServer(options: HealthServerOptions): Promise<HealthS
     }
   });
 
-  // Заглушка под Prometheus — реальные метрики в ЭТАП 8.4 / 24.5.
-  app.get("/metrics", (c) => c.text("# worker metrics placeholder\n"));
+  // Метрики очередей в формате Prometheus (TASK 8.4). Если провайдер не задан —
+  // отдаём пустой комментарий (валидный для Prometheus scrape).
+  app.get("/metrics", async (c) => {
+    if (!options.metricsText) return c.text("# no metrics provider\n");
+    try {
+      const body = await options.metricsText();
+      return c.text(body);
+    } catch (error) {
+      options.logger.error(
+        { err: error instanceof Error ? error.message : String(error) },
+        "не удалось собрать метрики",
+      );
+      return c.text("# metrics collection failed\n", 500);
+    }
+  });
 
   return new Promise<HealthServer>((resolve) => {
     const server = serve({ fetch: app.fetch, port: options.port }, (info) => {

@@ -1,6 +1,26 @@
 {
-  "extends": "@avastudio/config/typescript/node.json",
-  "compilerOptions": { "noEmit": true },
-  "include": ["src/**/*"],
-  "exclude": ["node_modules"]
+  "extends": "@avastudio/config/typescript/base.json",
+  "compilerOptions": {
+    "noEmit": true,
+    "jsx": "react-jsx",
+    "lib": [
+      "ES2022",
+      "DOM",
+      "DOM.Iterable"
+    ],
+    "moduleResolution": "Bundler",
+    "types": [
+      "react",
+      "react-dom"
+    ]
+  },
+  "include": [
+    "src/**/*",
+    ".storybook/**/*"
+  ],
+  "exclude": [
+    "node_modules",
+    ".storybook",
+    "src/stories"
+  ]
 }

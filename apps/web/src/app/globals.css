@@ -1,3 +1,33 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import "@avastudio/ui/styles.css";
+
+/* ===========================================================================
+   Активная вкладка + рабочая область: единый мягкий свечащийся контур
+   ("парящий потолок"). Меняйте переменные ниже, чтобы настроить свечение.
+   --------------------------------------------------------------------------
+   --glow-color    : цвет свечения (HSL без hsl(), наследует акцент --primary)
+   --glow-strength : насыщенность/яркость свечения (0 = выкл, 1 = максимум)
+   --glow-blur     : мягкость/размытие края (px — больше = мягче)
+   =========================================================================== */
+:root {
+  --glow-color: var(--primary);
+  --glow-strength: 0.45;
+  --glow-blur: 18px;
+}
+
+/* Подсвеченная активная вкладка навигации */
+.glow-active {
+  box-shadow:
+    0 0 var(--glow-blur) hsl(var(--glow-color) / var(--glow-strength)),
+    inset 0 0 calc(var(--glow-blur) / 2.4)
+      hsl(var(--glow-color) / calc(var(--glow-strength) * 0.5));
+  border: 1px solid hsl(var(--glow-color) / calc(var(--glow-strength) + 0.15));
+}
+
+/* Рабочая область — тот же мягкий контур, читается как одно целое с вкладкой */
+.glow-panel {
+  border-color: hsl(var(--glow-color) / calc(var(--glow-strength) * 0.6));
+  box-shadow:
+    0 0 var(--glow-blur) hsl(var(--glow-color) / calc(var(--glow-strength) * 0.55)),
+    inset 0 0 calc(var(--glow-blur) / 2)
+      hsl(var(--glow-color) / calc(var(--glow-strength) * 0.25));
+}

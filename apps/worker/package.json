@@ -23,7 +23,10 @@
   "dependencies": {
     "@avastudio/shared": "workspace:*",
     "@avastudio/queue": "workspace:*",
+    "@avastudio/db": "workspace:*",
+    "@avastudio/media": "workspace:*",
     "bullmq": "5.77.3",
+    "drizzle-orm": "0.45.2",
     "hono": "4.12.23",
     "@hono/node-server": "2.0.4"
   }

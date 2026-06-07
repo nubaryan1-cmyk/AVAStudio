@@ -4,3 +4,4 @@ export * from "./repositories/org-keys.js";
 export * from "./repositories/social-accounts.js";
 export * from "./repositories/proxies.js";
 export type { Db } from "./repositories/types.js";
+export * from "./replica.js";
