@@ -192,6 +192,9 @@ export default function DevicePanelPage(): JSX.Element {
               >
                 Выключить
               </Button>
+              <Button variant="outline" disabled={busy} onClick={() => void post("/api/device/install-instagram", { id: phone.id }, "Instagram ставится на телефон…")}>
+                Установить Instagram
+              </Button>
               <Button variant="secondary" disabled={busy} onClick={() => void post("/api/device/warmup", { id: phone.id }, "Прогрев поставлен в очередь")}>
                 Прогрев
               </Button>

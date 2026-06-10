@@ -79,3 +79,33 @@ export async function initProxy(id: string, proxy: ProxyConfig, ipScan = "ip2loc
     images: [{ image_id: id, ip_scan_channel: ipScan, proxy }],
   });
 }
+
+export interface DuoApp {
+  id: string; // app_id
+  name: string;
+  pkg: string;
+  version_list?: { id: string; name: string }[];
+}
+
+/** Каталог платформенных приложений DuoPlus (для установки). */
+export async function listApps(): Promise<DuoApp[]> {
+  const data = await duo<{ list?: DuoApp[] }>("/api/v1/app/list", { page: 1, pagesize: 100 });
+  return data.list ?? [];
+}
+
+/** Установить приложение из каталога DuoPlus на телефон. */
+export async function installApp(id: string, appId: string, appVersionId?: string): Promise<void> {
+  const body: Record<string, unknown> = { image_ids: [id], app_id: appId };
+  if (appVersionId) body.app_version_id = appVersionId;
+  await duo("/api/v1/app/install", body);
+}
+
+/** Найти Instagram в каталоге (по pkg/имени). Возвращает app_id или null. */
+export async function findInstagram(): Promise<DuoApp | null> {
+  const apps = await listApps();
+  return (
+    apps.find((a) => a.pkg === "com.instagram.android") ??
+    apps.find((a) => /instagram/i.test(a.name)) ??
+    null
+  );
+}
