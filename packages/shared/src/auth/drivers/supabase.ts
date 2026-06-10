@@ -134,3 +134,27 @@ export class SupabaseAuthProvider implements AuthProvider {
     return Promise.resolve();
   }
 }
+
+/**
+ * Фабрика боевого провайдера на реальном @supabase/supabase-js (TASK 16.3).
+ * Создаёт клиент и оборачивает его в provider-agnostic порт. Вызывается из веба,
+ * когда AUTH_PROVIDER=supabase и заданы SUPABASE_URL/SUPABASE_ANON_KEY.
+ */
+export async function createSupabaseAuthProvider(
+  url: string,
+  anonKey: string,
+  fallbackTtlSec?: number,
+): Promise<SupabaseAuthProvider> {
+  const { createClient } = await import("@supabase/supabase-js");
+  const client = createClient(url, anonKey, {
+    auth: { persistSession: false, autoRefreshToken: false },
+  });
+  const port: SupabaseAuthPort = {
+    signUp: (c) => client.auth.signUp(c) as unknown as Promise<SupabaseAuthResponse>,
+    signInWithPassword: (c) =>
+      client.auth.signInWithPassword(c) as unknown as Promise<SupabaseAuthResponse>,
+    getUser: (jwt) => client.auth.getUser(jwt) as unknown as Promise<SupabaseUserResponse>,
+    signOut: () => client.auth.signOut() as unknown as Promise<{ error: SupabaseError | null }>,
+  };
+  return new SupabaseAuthProvider({ client: port, ...(fallbackTtlSec ? { fallbackTtlSec } : {}) });
+}

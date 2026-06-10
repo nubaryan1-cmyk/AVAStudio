@@ -32,7 +32,7 @@ export async function POST(req: Request): Promise<NextResponse> {
   }
 
   try {
-    const session = await getAuthProvider().signUp({ email, password });
+    const session = await (await getAuthProvider()).signUp({ email, password });
     const res = NextResponse.json({ ok: true, email: session.user.email });
     res.cookies.set(ACCESS_COOKIE, session.accessToken, {
       httpOnly: true,

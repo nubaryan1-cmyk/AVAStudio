@@ -14,7 +14,7 @@ export async function POST(req: Request): Promise<NextResponse> {
   const password = typeof body?.password === "string" ? body.password : "";
 
   try {
-    const session = await getAuthProvider().signIn({ email, password });
+    const session = await (await getAuthProvider()).signIn({ email, password });
     const res = NextResponse.json({ ok: true, email: session.user.email });
     res.cookies.set(ACCESS_COOKIE, session.accessToken, {
       httpOnly: true,
