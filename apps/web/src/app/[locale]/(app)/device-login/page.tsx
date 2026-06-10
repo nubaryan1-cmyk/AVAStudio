@@ -54,6 +54,15 @@ export default function DevicePanelPage(): JSX.Element {
   const [accSecret, setAccSecret] = useState("");
   const utils = trpc.useUtils();
   const bindPhone = trpc.accounts.bindPhone.useMutation();
+  const savedAccounts = trpc.accounts.list.useQuery({ platform: "instagram" });
+  const removeAccount = trpc.accounts.remove.useMutation({
+    onSuccess: () => {
+      void savedAccounts.refetch();
+      void utils.autopilot.accounts.invalidate();
+      setMsg("Аккаунт удалён");
+    },
+    onError: (e) => setMsg(`Ошибка удаления: ${e.message}`),
+  });
   const addAccount = trpc.accounts.add.useMutation({
     onSuccess: (acc) => {
       if (phone) bindPhone.mutate({ id: acc.id, phoneId: phone.id });
@@ -61,6 +70,7 @@ export default function DevicePanelPage(): JSX.Element {
       setAccHandle("");
       setAccSecret("");
       void utils.autopilot.accounts.invalidate();
+      void savedAccounts.refetch();
     },
     onError: (e) => setMsg(`Ошибка аккаунта: ${e.message}`),
   });
@@ -312,6 +322,32 @@ export default function DevicePanelPage(): JSX.Element {
               >
                 {addAccount.isPending ? "Сохраняю…" : "Войти / сохранить аккаунт"}
               </Button>
+            </CardContent>
+          </Card>
+        )}
+
+        {(savedAccounts.data ?? []).length > 0 && (
+          <Card>
+            <CardHeader>
+              <CardTitle>Сохранённые аккаунты</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <ul className="divide-y rounded-md border">
+                {(savedAccounts.data ?? []).map((a) => (
+                  <li key={a.id} className="flex items-center gap-3 p-3">
+                    <span className="flex-1 truncate font-medium">{a.handle}</span>
+                    <Badge variant="secondary">{a.status}</Badge>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      disabled={removeAccount.isPending}
+                      onClick={() => removeAccount.mutate({ id: a.id })}
+                    >
+                      Удалить
+                    </Button>
+                  </li>
+                ))}
+              </ul>
             </CardContent>
           </Card>
         )}

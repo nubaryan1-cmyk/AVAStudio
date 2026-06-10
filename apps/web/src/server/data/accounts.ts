@@ -3,6 +3,7 @@ import { env } from "@avastudio/shared";
 import {
   createDb,
   createSocialAccount,
+  deleteSocialAccount,
   getOrCreateDefaultOrg,
   listSocialAccountsForUi,
   type Database,
@@ -234,4 +235,16 @@ export function bindProxy(id: string, proxyId: string | null): SocialAccount {
       action: proxyId ? `Привязан прокси ${proxyId}` : "Прокси отвязан",
     });
   });
+}
+
+
+/** Удаляет аккаунт из кэша и из БД. */
+export async function removeAccount(id: string): Promise<void> {
+  STORE.delete(id);
+  try {
+    const orgId = await ensureDefaultOrg();
+    await deleteSocialAccount(getDb(), orgId, id);
+  } catch {
+    /* если БД недоступна — хотя бы из кэша убрали */
+  }
 }

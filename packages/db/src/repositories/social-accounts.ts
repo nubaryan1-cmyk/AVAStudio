@@ -1,5 +1,5 @@
 import { decryptJSON, encryptJSON } from "@avastudio/shared";
-import { eq } from "drizzle-orm";
+import { and, eq } from "drizzle-orm";
 
 import { organizations, platform as platformEnum, socialAccounts } from "../schema/index.js";
 
@@ -102,4 +102,10 @@ export async function getOrCreateDefaultOrg(db: Db): Promise<string> {
   const row = created[0];
   if (!row) throw new Error("Не удалось создать организацию");
   return row.id;
+}
+
+
+/** Удаляет аккаунт по id (в рамках организации). */
+export async function deleteSocialAccount(db: Db, orgId: string, id: string): Promise<void> {
+  await db.delete(socialAccounts).where(and(eq(socialAccounts.orgId, orgId), eq(socialAccounts.id, id)));
 }

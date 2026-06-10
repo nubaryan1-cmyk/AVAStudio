@@ -3,7 +3,7 @@ import { IMPL_MECHANISMS } from "@avastudio/shared/social";
 import { z } from "zod";
 
 
-import { addAccount, bindPhone, bindProxy, ensureAccountsReady, getAccount, listAccounts } from "../data/accounts.js";
+import { addAccount, bindPhone, bindProxy, ensureAccountsReady, getAccount, listAccounts, removeAccount } from "../data/accounts.js";
 import { publicProcedure, router } from "../trpc.js";
 
 const platformEnum = z.enum(PLATFORMS);
@@ -34,6 +34,10 @@ export const accountsRouter = router({
       }),
     )
     .mutation(({ input }) => addAccount(input)),
+
+  remove: publicProcedure
+    .input(z.object({ id: z.string().min(1) }))
+    .mutation(({ input }) => removeAccount(input.id)),
 
   bindPhone: publicProcedure
     .input(z.object({ id: z.string().min(1), phoneId: z.string().min(1).nullable() }))
