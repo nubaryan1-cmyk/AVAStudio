@@ -140,9 +140,8 @@ export default function DevicePanelPage(): JSX.Element {
                     onChange={(e) => setProtocol(e.target.value)}
                   >
                     <option value="socks5">socks5</option>
-                    <option value="http">http</option>
-                    <option value="https">https</option>
                   </select>
+                  <p className="mt-1 text-xs text-muted-foreground">DuoPlus поддерживает только SOCKS5.</p>
                 </div>
                 <div>
                   <Label>Хост</Label>
