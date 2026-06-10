@@ -31,7 +31,10 @@
     "devices": "Устройства",
     "deviceLogin": "Вход",
     "video": "Видео",
-    "generation": "Генерация"
+    "generation": "Генерация",
+    "warmup": "Прогрев",
+    "upload": "Заливка",
+    "cloudPhone": "Облачный телефон"
   },
   "Marketing": {
     "features": "Возможности",

@@ -15,6 +15,7 @@ const SECTIONS = {
   devices: [
     { href: "/accounts", key: "accounts" },
     { href: "/proxies", key: "proxies" },
+    { href: "/device-login", key: "cloudPhone" },
   ],
   editing: [
     { href: "/music", key: "music" },
@@ -22,8 +23,8 @@ const SECTIONS = {
     { href: "/editor", key: "editor" },
   ],
   autopilot: [
-    { href: "/autopilot", key: "autopilot" },
-    { href: "/device-login", key: "deviceLogin" },
+    { href: "/warmup", key: "warmup" },
+    { href: "/autopilot", key: "upload" },
     { href: "/calendar", key: "calendar" },
   ],
   generate: [

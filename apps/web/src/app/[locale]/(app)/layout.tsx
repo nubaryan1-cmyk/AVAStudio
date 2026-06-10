@@ -22,8 +22,8 @@ const NAV: ReadonlyArray<{ href: string; key: string; match?: ReadonlyArray<stri
   { href: "/personas", key: "personas" },
   { href: "/generate", key: "generate", match: ["/media", "/video"] },
   { href: "/music", key: "editing", match: ["/uniqueizer", "/editor"] },
-  { href: "/accounts", key: "devices", match: ["/proxies"] },
-  { href: "/autopilot", key: "autopilot", match: ["/calendar", "/device-login"] },
+  { href: "/accounts", key: "devices", match: ["/proxies", "/device-login"] },
+  { href: "/autopilot", key: "autopilot", match: ["/calendar", "/warmup"] },
 ];
 
 export default function AppLayout({ children }: { children: ReactNode }): JSX.Element {

@@ -31,7 +31,10 @@
     "devices": "Devices",
     "deviceLogin": "Login",
     "video": "Video",
-    "generation": "Generation"
+    "generation": "Generation",
+    "warmup": "Warmup",
+    "upload": "Upload",
+    "cloudPhone": "Cloud phone"
   },
   "Marketing": {
     "features": "Features",
