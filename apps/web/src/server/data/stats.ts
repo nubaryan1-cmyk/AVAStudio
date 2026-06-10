@@ -56,8 +56,8 @@ function series(range: StatsRange, base: number, swing: number, key: string): Me
     const iso = d.toISOString().slice(0, 10);
     const wave = Math.sin((range - i) / 3) * 0.5 + 0.5;
     const noise = seed(`${key}-${iso}`);
-    const value = Math.round(base + swing * (0.6 * wave + 0.4 * noise));
-    out.push({ date: iso, value });
+    void wave; void noise; void base; void swing;
+    out.push({ date: iso, value: 0 }); // п.2: реальных метрик пока нет — нули
   }
   return out;
 }

@@ -29,22 +29,7 @@ const STORE = new Map<string, Persona>();
 
 function seed(): void {
   if (STORE.size > 0) return;
-  const presets: CreatePersonaInput[] = [
-    {
-      name: "Фитнес-коуч",
-      niche: "фитнес и здоровье",
-      tone: "inspirational",
-      language: "ru",
-      promptTemplate: "Короткое мотивирующее видео о {тема}. Энергично, с призывом к действию.",
-    },
-    {
-      name: "Tech-обзорщик",
-      niche: "гаджеты и технологии",
-      tone: "expert",
-      language: "ru",
-      promptTemplate: "Чёткий разбор {тема}: плюсы, минусы, вывод за 30 секунд.",
-    },
-  ];
+  const presets: CreatePersonaInput[] = []; // п.2: демо-персоны убраны
   for (const p of presets) void insert(p, "2026-05-29T10:00:00Z");
 }
 

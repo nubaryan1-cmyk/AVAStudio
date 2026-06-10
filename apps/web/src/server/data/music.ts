@@ -24,20 +24,7 @@ export interface TrendsFilter {
   limit?: number | undefined;
 }
 
-const CHART: ReadonlyArray<Omit<TrendTrack, "rank" | "usesCount">> = [
-  { id: "trk_1", title: "Neon Skyline", artist: "Aurora Vale", platform: "tiktok", durationSec: 18 },
-  { id: "trk_2", title: "Paper Planes", artist: "Mid Nyte", platform: "tiktok", durationSec: 22 },
-  { id: "trk_3", title: "Golden Hour Drive", artist: "Ksenia R", platform: "instagram", durationSec: 27 },
-  { id: "trk_4", title: "Slow Motion", artist: "Volt&Co", platform: "tiktok", durationSec: 15 },
-  { id: "trk_5", title: "Velvet Echoes", artist: "Lune", platform: "instagram", durationSec: 30 },
-  { id: "trk_6", title: "City Lights Fade", artist: "Norok", platform: "youtube", durationSec: 24 },
-  { id: "trk_7", title: "Falling Up", artist: "Sable", platform: "tiktok", durationSec: 19 },
-  { id: "trk_8", title: "Midnight Bloom", artist: "Aria K", platform: "instagram", durationSec: 26 },
-  { id: "trk_9", title: "Static Dreams", artist: "Pulse Theory", platform: "youtube", durationSec: 31 },
-  { id: "trk_10", title: "Coastline", artist: "Mara V", platform: "tiktok", durationSec: 17 },
-  { id: "trk_11", title: "Afterglow", artist: "Hollow Sun", platform: "instagram", durationSec: 28 },
-  { id: "trk_12", title: "Run It Back", artist: "Dex M", platform: "youtube", durationSec: 21 },
-];
+const CHART: ReadonlyArray<Omit<TrendTrack, "rank" | "usesCount">> = []; // п.2: фейковый чарт убран
 
 /** Детерминированная метрика использований: зависит только от индекса. */
 function usesFor(index: number): number {

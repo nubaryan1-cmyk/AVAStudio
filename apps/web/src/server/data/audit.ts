@@ -15,13 +15,7 @@ async function seed(): Promise<void> {
   if (seeded) return;
   seeded = true;
   const base = new Date("2026-06-01T09:00:00Z");
-  const events: Array<{ action: AuditAction; at: string; entity?: string }> = [
-    { action: "auth.login", at: "2026-06-01T09:00:00Z" },
-    { action: "account.add", at: "2026-06-01T09:12:00Z", entity: "social_account" },
-    { action: "billing.subscribe", at: "2026-06-01T10:00:00Z", entity: "subscription" },
-    { action: "post.publish", at: "2026-06-01T11:30:00Z", entity: "posting_job" },
-    { action: "security.2fa_enabled", at: "2026-06-02T08:00:00Z" },
-  ];
+const events: Array<{ action: AuditAction; at: string; entity?: string }> = []; // п.2: демо-лог убран
   for (const e of events) {
     await audit(sink, e.action, { orgId: DEMO_ORG, userId: DEMO_USER, ip: "203.0.113.7", now: () => new Date(e.at) }, e.entity ? { entity: e.entity } : {});
   }

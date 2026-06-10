@@ -196,13 +196,7 @@ function seed(): void {
   const assets = listAssets({ type: "video" });
   if (accounts.length === 0 || assets.length === 0) return;
   const base = new Date("2026-06-02T00:00:00Z");
-  const presets: Array<{ dayOffset: number; hour: number; ai: number; pi: number }> = [
-    { dayOffset: -2, hour: 19, ai: 0, pi: 0 },
-    { dayOffset: -1, hour: 20, ai: 1, pi: 0 },
-    { dayOffset: 0, hour: 19, ai: 0, pi: 1 },
-    { dayOffset: 1, hour: 21, ai: 1, pi: 1 },
-    { dayOffset: 2, hour: 18, ai: 0, pi: 0 },
-  ];
+  const presets: Array<{ dayOffset: number; hour: number; ai: number; pi: number }> = []; // п.2: демо-расписание убрано
   for (const p of presets) {
     const acc = accounts[p.ai % accounts.length]!;
     const asset = assets[p.pi % assets.length]!;
