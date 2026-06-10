@@ -30,6 +30,33 @@ interface Draft {
 
 const EMPTY: Draft = { name: "", niche: "", tone: "friendly", language: "ru", promptTemplate: "" };
 
+/** Уменьшает фото до 768px и отдаёт data-URI (jpeg) — чтобы не таскать мегабайты. */
+async function fileToDataUrl(file: File): Promise<string> {
+  const dataUrl = await new Promise<string>((resolve, reject) => {
+    const fr = new FileReader();
+    fr.onload = () => resolve(fr.result as string);
+    fr.onerror = () => reject(new Error("read error"));
+    fr.readAsDataURL(file);
+  });
+  const img = await new Promise<HTMLImageElement>((resolve, reject) => {
+    const i = new Image();
+    i.onload = () => resolve(i);
+    i.onerror = () => reject(new Error("img error"));
+    i.src = dataUrl;
+  });
+  const max = 768;
+  const scale = Math.min(1, max / Math.max(img.width, img.height));
+  const w = Math.round(img.width * scale);
+  const h = Math.round(img.height * scale);
+  const canvas = document.createElement("canvas");
+  canvas.width = w;
+  canvas.height = h;
+  const ctx = canvas.getContext("2d");
+  if (!ctx) return dataUrl;
+  ctx.drawImage(img, 0, 0, w, h);
+  return canvas.toDataURL("image/jpeg", 0.85);
+}
+
 /**
  * Вкладка «AI-Персоны» — профили генерации (тон, ниша, язык, шаблон промпта).
  * Персона задаёт стиль для AI-Генерации и подписей. Phase-1: in-memory CRUD.
@@ -46,6 +73,13 @@ export default function PersonasPage(): JSX.Element {
   const create = trpc.personas.create.useMutation({ onSuccess: onDone });
   const update = trpc.personas.update.useMutation({ onSuccess: onDone });
   const remove = trpc.personas.remove.useMutation({ onSuccess: () => void utils.personas.list.invalidate() });
+  const setReference = trpc.personas.setReference.useMutation({ onSuccess: () => void utils.personas.list.invalidate() });
+
+  async function uploadFace(id: string, file: File | undefined): Promise<void> {
+    if (!file) return;
+    const imageUrl = await fileToDataUrl(file);
+    setReference.mutate({ id, imageUrl });
+  }
 
   const [draft, setDraft] = useState<Draft>(EMPTY);
   const [editId, setEditId] = useState<string | null>(null);
@@ -135,7 +169,26 @@ export default function PersonasPage(): JSX.Element {
                     </div>
                     <div className="text-sm text-muted-foreground">{p.niche} · {p.language}</div>
                     <p className="mt-1 text-sm">{p.promptTemplate}</p>
-                    <div className="mt-2 flex gap-2">
+                    <div className="mt-2 flex items-center gap-3">
+                      {p.referenceImageUrl ? (
+                        <img src={p.referenceImageUrl} alt="лицо" className="h-12 w-12 rounded-md border object-cover" />
+                      ) : null}
+                      {p.referenceImageUrl ? (
+                        <Badge variant="secondary">Лицо персонажа привязано</Badge>
+                      ) : (
+                        <span className="text-xs text-muted-foreground">Фото персонажа не задано</span>
+                      )}
+                    </div>
+                    <div className="mt-2 flex flex-wrap items-center gap-2">
+                      <label className="cursor-pointer rounded-md border px-3 py-1.5 text-sm hover:bg-accent">
+                        {p.referenceImageUrl ? "Заменить фото" : "Загрузить фото лица"}
+                        <input
+                          type="file"
+                          accept="image/*"
+                          className="hidden"
+                          onChange={(e) => void uploadFace(p.id, e.target.files?.[0])}
+                        />
+                      </label>
                       <Button size="sm" variant="outline" onClick={() => { setEditId(p.id); setDraft({ name: p.name, niche: p.niche, tone: p.tone, language: p.language, promptTemplate: p.promptTemplate }); }}>
                         {t("edit")}
                       </Button>

@@ -55,11 +55,16 @@ function GenPanel({ kind }: { kind: Kind }): JSX.Element {
     const fullPrompt = persona
       ? `${prompt}\n\n[Стиль персонажа «${persona.name}»: ${persona.tone}, ниша ${persona.niche}. ${persona.promptTemplate}]`
       : prompt;
+    // Если у персонажа есть фото лица и это ФОТО — используем PuLID для консистентности лица.
+    const ref = (persona as { referenceImageUrl?: string } | undefined)?.referenceImageUrl;
+    const useFace = kind === "image" && Boolean(ref);
+    const effModel = useFace ? "fal-ai/flux-pulid" : model;
+    const extra = useFace ? { reference_image_url: ref } : undefined;
     try {
       const r = await fetch("/api/ai/submit", {
         method: "POST",
         headers: { "content-type": "application/json" },
-        body: JSON.stringify({ model, prompt: fullPrompt }),
+        body: JSON.stringify({ model: effModel, prompt: fullPrompt, ...(extra ? { extra } : {}) }),
       });
       const j = (await r.json()) as { ok: boolean; statusUrl?: string; responseUrl?: string; error?: string };
       if (!j.ok || !j.statusUrl || !j.responseUrl) {

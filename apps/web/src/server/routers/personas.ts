@@ -5,6 +5,7 @@ import {
   deletePersona,
   listPersonas,
   PERSONA_TONES,
+  setPersonaReference,
   updatePersona,
 } from "../data/personas.js";
 import { publicProcedure, router } from "../trpc.js";
@@ -26,4 +27,7 @@ export const personasRouter = router({
   remove: publicProcedure
     .input(z.object({ id: z.string().min(1) }))
     .mutation(({ input }) => deletePersona(input.id)),
+  setReference: publicProcedure
+    .input(z.object({ id: z.string().min(1), imageUrl: z.string().min(1).max(3_000_000) }))
+    .mutation(({ input }) => setPersonaReference(input.id, input.imageUrl)),
 });

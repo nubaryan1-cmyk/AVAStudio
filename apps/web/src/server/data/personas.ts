@@ -14,6 +14,8 @@ export interface Persona {
   language: string;
   promptTemplate: string;
   createdAt: string;
+  /** Референс-фото лица (data-URI) для консистентного персонажа через PuLID. */
+  referenceImageUrl?: string;
 }
 
 export interface CreatePersonaInput {
@@ -48,6 +50,16 @@ export function listPersonas(): Persona[] {
 export function createPersona(input: CreatePersonaInput): Persona {
   seed();
   return insert(input, new Date().toISOString());
+}
+
+/** Привязывает референс-фото лица к персоне (быстрый режим PuLID). */
+export function setPersonaReference(id: string, imageUrl: string): Persona {
+  seed();
+  const existing = STORE.get(id);
+  if (!existing) throw new Error("Персона не найдена");
+  const updated: Persona = { ...existing, referenceImageUrl: imageUrl };
+  STORE.set(id, updated);
+  return updated;
 }
 
 export function updatePersona(id: string, input: CreatePersonaInput): Persona {
