@@ -37,8 +37,14 @@ export async function listPhones(): Promise<DuoPhone[]> {
   return (data.list ?? []).filter((d) => typeof d.id === "string");
 }
 
-export async function powerPhone(id: string, on: boolean): Promise<void> {
-  await duo(`/api/v1/cloudPhone/${on ? "powerOn" : "powerOff"}`, { image_ids: [id] });
+export interface PowerResult {
+  success?: string[];
+  fail?: string[];
+  fail_reason?: Record<string, string> | string[];
+}
+
+export async function powerPhone(id: string, on: boolean): Promise<PowerResult> {
+  return duo<PowerResult>(`/api/v1/cloudPhone/${on ? "powerOn" : "powerOff"}`, { image_ids: [id] });
 }
 
 /** Включить ADB на телефоне (нужно один раз, до любых команд/скриншота). Идемпотентно. */
