@@ -1,16 +1,27 @@
 /**
- * Реальный драйвер DuoPlus (TASK 22.1). Реализует тот же PhoneProvider, что и mock
- * (ЭТАП 12.2) — PhonePool/бизнес-код не меняется. ВАЖНО: это ОДИН из провайдеров,
- * не привязка (failover на аналог — 22.2). HTTP через внедряемый fetchImpl (тесты без сети);
- * ключ `DuoPlus-API-Key` из Doppler, наружу не логируется.
+ * Реальный драйвер DuoPlus (TASK 22.1). Реализует PhoneProvider (интерфейс из ЭТАП 12.2),
+ * бизнес-код/PhonePool не меняется. Один из провайдеров, не привязка (failover — 22.2).
  *
- * Маппинг эндпоинтов DuoPlus (help.duoplus.net/docs/api-reference):
- *   rentDevice    → POST /cloudphone/buy            (Buy Cloud Phone)
- *   listDevices   → GET  /cloudphone/list           (Cloud Phone List)
- *   getStatus     → GET  /cloudphone/status?id=     (Cloud Phone Status)
- *   installApp    → POST /application/batch-install (Batch Install App)
- *   executeAction → POST /cloudphone/adb            (Execute ADB command) / screenshot
- *   releaseDevice → POST /cloudphone/power-off      (аренда — подписка; полный возврат — на стороне биллinга)
+ * API (help.duoplus.net/docs/api-reference, проверено на боевом ключе):
+ *   Домен:   https://openapi.duoplus.net
+ *   Метод:   POST на всех эндпоинтах, тело — JSON
+ *   Хедеры:  DuoPlus-API-Key (из Doppler), Content-Type: application/json, Lang: en
+ *   Конверт ответа: { code:number (200 ok), data:object, message:string }
+ *
+ * Маппинг эндпоинтов:
+ *   listDevices   → POST /api/v1/cloudPhone/list        (Cloud Phone List, status: int)
+ *   getStatus     → берётся из listDevices (статус есть в списке)
+ *   executeAction → POST /api/v1/cloudPhone/command     (Execute ADB command; команда без префикса "adb shell")
+ *   installApp    → POST /api/v1/application/batchInstall
+ *   rentDevice    → POST /api/v1/cloudPhone/buy         (Buy Cloud Phone — платно!)
+ *   releaseDevice → POST /api/v1/cloudPhone/powerOff    (выключение; полный возврат — биллинг DuoPlus)
+ *   powerOn       → POST /api/v1/cloudPhone/powerOn
+ *
+ * Статусы DuoPlus (int): 0 не сконфигурирован; 1 включён; 2 выключен; 3 истёк;
+ *   4 просрочено продление; 10 включается; 11 конфигурируется; 12 ошибка конфигурации.
+ *
+ * Скриншот экрана получаем через ADB: `screencap -p /sdcard/_ava.png; base64 /sdcard/_ava.png`
+ * — base64 приходит в data.content; декодируется в PNG для live-просмотра.
  */
 import { asPhoneId, type PhoneId } from "../../domain/ids.js";
 
@@ -27,69 +38,102 @@ import type {
 export interface DuoPlusConfig {
   apiKey?: string;
   baseUrl?: string;
+  lang?: string;
   fetchImpl?: typeof fetch;
 }
 
-const DEFAULT_BASE = "https://api.duoplus.net/api";
+const DEFAULT_BASE = "https://openapi.duoplus.net";
 
-const CAPS: PhoneProviderCapabilities = { adb: true, screenshot: true, appInstall: true, maxDevices: 200 };
+const CAPS: PhoneProviderCapabilities = { adb: true, screenshot: true, appInstall: true, maxDevices: 10000 };
+
+interface DuoEnvelope<T> {
+  code?: number;
+  data?: T;
+  message?: string;
+}
 
 interface DuoListItem {
   id?: string;
-  status?: string;
-  region?: string;
-  androidVersion?: string;
+  name?: string;
+  status?: number;
+  os?: string;
+  area?: string;
+  ip?: string;
+  adb?: string;
 }
 
-function mapState(status: string | undefined): DeviceState {
-  switch ((status ?? "").toLowerCase()) {
-    case "running":
-    case "on":
+/** Числовой статус DuoPlus → доменное состояние устройства. */
+function mapState(status: number | undefined): DeviceState {
+  switch (status) {
+    case 1: // Powered on
+    case 10: // Powering on
       return "rented";
-    case "idle":
-    case "available":
+    case 2: // Powered off — арендован, но выключен → доступен к запуску
       return "available";
-    case "error":
-    case "failed":
+    case 12: // Configuration failed
       return "error";
+    // 0 не сконфигурирован, 3 истёк, 4 просрочено, 11 конфигурируется
     default:
       return "offline";
   }
 }
 
-/** ADB-команда для нормализованного действия (input tap/swipe/text). */
+/** ADB shell-команда для нормализованного действия (без префикса "adb shell"). */
 function adbCommand(action: DeviceAction): string {
   switch (action.kind) {
     case "tap":
       return `input tap ${action.x ?? 0} ${action.y ?? 0}`;
-    case "swipe":
-      return `input swipe ${action.x ?? 0} ${action.y ?? 0} ${action.x ?? 0} ${(action.y ?? 0) + 300}`;
+    case "swipe": {
+      const x = action.x ?? 0;
+      const y = action.y ?? 0;
+      // Интерфейс DeviceAction несёт только x/y; вертикальный свайп фикс-дельтой (≈скролл ленты).
+      return `input swipe ${x} ${y} ${x} ${y + 300} 300`;
+    }
     case "type":
-      return `input text ${JSON.stringify(action.text ?? "")}`;
+      // Пробелы в input text экранируем как %s.
+      return `input text ${JSON.stringify((action.text ?? "").replace(/ /g, "%s"))}`;
     case "launch":
-      return `monkey -p ${action.appPackage ?? ""} 1`;
+      return `monkey -p ${action.appPackage ?? ""} -c android.intent.category.LAUNCHER 1`;
     case "screenshot":
-      return "screencap -p";
+      return "screencap -p /sdcard/_ava.png >/dev/null 2>&1; base64 /sdcard/_ava.png";
   }
 }
 
 export function createDuoPlusDriver(config: DuoPlusConfig = {}): PhoneProvider {
   const base = config.baseUrl ?? DEFAULT_BASE;
-  function client(): typeof fetch {
+  const lang = config.lang ?? "en";
+
+  function ensureKey(): string {
     if (config.apiKey === undefined || config.apiKey === "") {
       throw new Error("duoplus: API-ключ не настроен");
     }
-    return config.fetchImpl ?? fetch;
+    return config.apiKey;
   }
-  const headers = (): Record<string, string> => ({
-    "DuoPlus-API-Key": config.apiKey ?? "",
-    "content-type": "application/json",
-  });
-  async function call<T>(path: string, init?: RequestInit): Promise<T> {
-    const f = client();
-    const res = await f(`${base}${path}`, { ...init, headers: headers() });
+
+  /** POST на DuoPlus Open API. Кидает ошибку при HTTP!=ok или code!=200. */
+  async function call<T>(path: string, body: Record<string, unknown>): Promise<T> {
+    const key = ensureKey();
+    const f = config.fetchImpl ?? fetch;
+    const res = await f(`${base}${path}`, {
+      method: "POST",
+      headers: {
+        "DuoPlus-API-Key": key,
+        "Content-Type": "application/json",
+        Lang: lang,
+      },
+      body: JSON.stringify(body),
+    });
     if (!res.ok) throw new Error(`duoplus: HTTP ${res.status} on ${path}`);
-    return (await res.json()) as T;
+    const env = (await res.json()) as DuoEnvelope<T>;
+    if (env.code !== 200) {
+      throw new Error(`duoplus: code ${env.code ?? "?"} on ${path}: ${env.message ?? ""}`);
+    }
+    return (env.data ?? ({} as T));
+  }
+
+  async function fetchList(): Promise<readonly DuoListItem[]> {
+    const data = await call<{ list?: DuoListItem[] }>("/api/v1/cloudPhone/list", { page: 1, pagesize: 100 });
+    return data.list ?? [];
   }
 
   return {
@@ -98,7 +142,7 @@ export function createDuoPlusDriver(config: DuoPlusConfig = {}): PhoneProvider {
 
     async isHealthy(): Promise<boolean> {
       try {
-        await call("/cloudphone/list", { method: "GET" });
+        await fetchList();
         return true;
       } catch {
         return false;
@@ -106,50 +150,55 @@ export function createDuoPlusDriver(config: DuoPlusConfig = {}): PhoneProvider {
     },
 
     async rentDevice(spec: DeviceSpec): Promise<Device> {
-      const data = await call<{ id?: string; region?: string; androidVersion?: string }>("/cloudphone/buy", {
-        method: "POST",
-        body: JSON.stringify({ region: spec.region, androidVersion: spec.androidVersion, label: spec.label, count: 1 }),
+      // Buy Cloud Phone — платная операция. region/androidVersion — необязательны.
+      const data = await call<{ ids?: string[]; id?: string }>("/api/v1/cloudPhone/buy", {
+        region: spec.region,
+        androidVersion: spec.androidVersion,
+        name: spec.label,
+        count: 1,
       });
-      if (!data.id) throw new Error("duoplus: пустой id при аренде");
-      const device: Device = { id: asPhoneId(data.id), provider: "duoplus", state: "rented" };
-      const region = data.region ?? spec.region;
-      const androidVersion = data.androidVersion ?? spec.androidVersion;
-      if (region) device.region = region;
-      if (androidVersion) device.androidVersion = androidVersion;
+      const id = data.id ?? data.ids?.[0];
+      if (!id) throw new Error("duoplus: пустой id при покупке");
+      const device: Device = { id: asPhoneId(id), provider: "duoplus", state: "rented" };
+      if (spec.region) device.region = spec.region;
+      if (spec.androidVersion) device.androidVersion = spec.androidVersion;
       return device;
     },
 
     async releaseDevice(deviceId: PhoneId): Promise<void> {
-      await call("/cloudphone/power-off", { method: "POST", body: JSON.stringify({ ids: [deviceId] }) });
+      await call("/api/v1/cloudPhone/powerOff", { image_ids: [deviceId] });
     },
 
     async listDevices(): Promise<readonly Device[]> {
-      const data = await call<{ list?: DuoListItem[] }>("/cloudphone/list", { method: "GET" });
-      return (data.list ?? [])
+      const list = await fetchList();
+      return list
         .filter((d): d is DuoListItem & { id: string } => typeof d.id === "string")
         .map((d) => {
           const dev: Device = { id: asPhoneId(d.id), provider: "duoplus", state: mapState(d.status) };
-          if (d.region) dev.region = d.region;
-          if (d.androidVersion) dev.androidVersion = d.androidVersion;
+          if (d.area) dev.region = d.area;
+          if (d.os) dev.androidVersion = d.os;
           return dev;
         });
     },
 
     async installApp(deviceId: PhoneId, apkRef: string): Promise<void> {
-      await call("/application/batch-install", {
-        method: "POST",
-        body: JSON.stringify({ ids: [deviceId], app: apkRef }),
-      });
+      // apkRef — id приложения из List of Platform/Team App.
+      await call("/api/v1/application/batchInstall", { image_ids: [deviceId], app_id: apkRef });
     },
 
     async executeAction(deviceId: PhoneId, action: DeviceAction): Promise<ActionResult> {
       try {
-        const data = await call<{ output?: string; screenshot?: string }>("/cloudphone/adb", {
-          method: "POST",
-          body: JSON.stringify({ id: deviceId, command: adbCommand(action) }),
-        });
+        const data = await call<{ success?: boolean; content?: string; message?: string }>(
+          "/api/v1/cloudPhone/command",
+          { image_id: deviceId, command: adbCommand(action) },
+        );
+        if (data.success === false) {
+          return { ok: false, error: data.message ?? "duoplus: команда не выполнена" };
+        }
         const result: ActionResult = { ok: true };
-        if (action.kind === "screenshot" && data.screenshot) result.screenshot = data.screenshot;
+        if (action.kind === "screenshot" && data.content) {
+          result.screenshot = data.content.replace(/\s+/g, ""); // base64 PNG
+        }
         return result;
       } catch (err) {
         return { ok: false, error: err instanceof Error ? err.message : String(err) };
@@ -157,10 +206,9 @@ export function createDuoPlusDriver(config: DuoPlusConfig = {}): PhoneProvider {
     },
 
     async getStatus(deviceId: PhoneId): Promise<DeviceState> {
-      const data = await call<{ status?: string }>(`/cloudphone/status?id=${encodeURIComponent(deviceId)}`, {
-        method: "GET",
-      });
-      return mapState(data.status);
+      const list = await fetchList();
+      const found = list.find((d) => d.id === deviceId);
+      return mapState(found?.status);
     },
   };
 }
