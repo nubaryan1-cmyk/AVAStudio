@@ -5,6 +5,7 @@
 
 # ---------- base ----------
 FROM node:20-bookworm-slim AS base
+RUN sed -i 's|http://deb.debian.org|https://deb.debian.org|g; s|http://security.debian.org|https://security.debian.org|g' /etc/apt/sources.list.d/debian.sources
 ENV PNPM_HOME=/pnpm
 ENV PATH=$PNPM_HOME:$PATH
 RUN corepack enable && corepack prepare pnpm@10.34.1 --activate
@@ -29,6 +30,7 @@ RUN mkdir -p /opt/ffmpeg && tar -xf /tmp/ffmpeg.tar.xz -C /opt/ffmpeg --strip-co
 # ---------- runtime ----------
 FROM node:20-bookworm-slim AS runtime
 ENV NODE_ENV=production
+RUN sed -i 's|http://deb.debian.org|https://deb.debian.org|g; s|http://security.debian.org|https://security.debian.org|g' /etc/apt/sources.list.d/debian.sources
 # Системные зависимости Chromium (Playwright) + шрифты + утилиты для рендера.
 RUN apt-get update && apt-get install -y --no-install-recommends \
       chromium \
