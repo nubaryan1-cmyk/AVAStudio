@@ -41,6 +41,9 @@ importers:
 
   apps/web:
     dependencies:
+      '@avastudio/db':
+        specifier: workspace:*
+        version: link:../../packages/db
       '@avastudio/media':
         specifier: workspace:*
         version: link:../../packages/media

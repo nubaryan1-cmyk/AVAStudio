@@ -1,4 +1,12 @@
 import { encrypt, generateDataKey, type EncryptedBlob } from "@avastudio/shared/credentials";
+import { env } from "@avastudio/shared";
+import {
+  createDb,
+  createSocialAccount,
+  getOrCreateDefaultOrg,
+  listSocialAccountsForUi,
+  type Database,
+} from "@avastudio/db";
 import { asSocialAccountId, type Platform } from "@avastudio/shared/domain";
 import {
   createInstagramDriver,
@@ -59,6 +67,62 @@ const ORG_DEK = generateDataKey();
 
 let seq = 100;
 const STORE = new Map<string, SocialAccount>();
+
+/* ─── Персистентность в Postgres (Supabase): write-through + гидрация кэша ───
+ * Синхронный интерфейс (listAccounts/getAccount) сохранён: роуты вызывают
+ * ensureAccountsReady() перед чтением, дальше читают кэш STORE. */
+let dbInstance: Database | null = null;
+let defaultOrgId: string | null = null;
+let hydrated = false;
+
+function getDb(): Database {
+  if (!dbInstance) dbInstance = createDb(env.DATABASE_URL);
+  return dbInstance;
+}
+
+/** Находит/создаёт дефолт-организацию (single-tenant на тест-фазе). */
+async function ensureDefaultOrg(): Promise<string> {
+  if (defaultOrgId) return defaultOrgId;
+  defaultOrgId = await getOrCreateDefaultOrg(getDb());
+  return defaultOrgId;
+}
+
+const DB_TO_MEM: Record<string, AccountStatus> = {
+  active: "active",
+  warming_up: "warmup",
+  checkpoint: "checkpoint",
+  pending: "authorized",
+};
+
+/** Гидрация кэша из БД (один раз на процесс). Вызывать в роутах перед чтением. */
+export async function ensureAccountsReady(): Promise<void> {
+  if (hydrated) return;
+  hydrated = true;
+  try {
+    const orgId = await ensureDefaultOrg();
+    const rows = await listSocialAccountsForUi(getDb(), orgId);
+    const now = new Date().toISOString();
+    for (const r of rows) {
+      if (STORE.has(r.id)) continue;
+      STORE.set(r.id, {
+        id: r.id,
+        platform: r.platform,
+        handle: r.username,
+        mechanism: "phone",
+        status: DB_TO_MEM[r.status] ?? "authorized",
+        healthScore: r.healthScore,
+        lastActivity: now,
+        phoneId: null,
+        proxyId: null,
+        sessionRef: `db-${r.id}`,
+        encryptedCreds: encrypt("", ORG_DEK),
+        log: [{ at: now, action: "Загружен из БД" }],
+      });
+    }
+  } catch {
+    hydrated = false; // позволить повторную попытку при сбое БД
+  }
+}
 
 function seed(): void {
   if (STORE.size > 0) return;
@@ -125,6 +189,22 @@ export async function addAccount(input: AddAccountInput): Promise<SocialAccount>
     ],
   };
   STORE.set(id, account);
+  // write-through в БД (не валим UI, если БД недоступна)
+  try {
+    const orgId = await ensureDefaultOrg();
+    const { id: dbId } = await createSocialAccount(getDb(), {
+      orgId,
+      platform: input.platform,
+      username: input.handle,
+      credentials: { password: input.secret },
+    });
+    STORE.delete(id);
+    account.id = dbId;
+    account.sessionRef = `db-${dbId}`;
+    STORE.set(dbId, account);
+  } catch {
+    /* оставляем в кэше даже если БД недоступна */
+  }
   return account;
 }
 

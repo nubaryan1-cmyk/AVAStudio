@@ -8,12 +8,16 @@ import {
   reschedule,
   schedulePost,
 } from "../data/scheduling.js";
+import { ensureAccountsReady } from "../data/accounts.js";
 import { publicProcedure, router } from "../trpc.js";
 
 const isoString = z.string().datetime({ offset: true }).or(z.string().min(10));
 
 export const schedulingRouter = router({
-  accounts: publicProcedure.query(() => listSchedulableAccounts()),
+  accounts: publicProcedure.query(async () => {
+    await ensureAccountsReady();
+    return listSchedulableAccounts();
+  }),
   posts: publicProcedure.query(() => listPosts()),
 
   conflicts: publicProcedure

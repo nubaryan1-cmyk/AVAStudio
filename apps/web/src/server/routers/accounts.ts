@@ -3,7 +3,7 @@ import { IMPL_MECHANISMS } from "@avastudio/shared/social";
 import { z } from "zod";
 
 
-import { addAccount, bindPhone, bindProxy, getAccount, listAccounts } from "../data/accounts.js";
+import { addAccount, bindPhone, bindProxy, ensureAccountsReady, getAccount, listAccounts } from "../data/accounts.js";
 import { publicProcedure, router } from "../trpc.js";
 
 const platformEnum = z.enum(PLATFORMS);
@@ -12,11 +12,17 @@ const mechanismEnum = z.enum(IMPL_MECHANISMS);
 export const accountsRouter = router({
   list: publicProcedure
     .input(z.object({ platform: platformEnum.optional() }).optional())
-    .query(({ input }) => listAccounts(input?.platform)),
+    .query(async ({ input }) => {
+      await ensureAccountsReady();
+      return listAccounts(input?.platform);
+    }),
 
   byId: publicProcedure
     .input(z.object({ id: z.string().min(1) }))
-    .query(({ input }) => getAccount(input.id)),
+    .query(async ({ input }) => {
+      await ensureAccountsReady();
+      return getAccount(input.id);
+    }),
 
   add: publicProcedure
     .input(

@@ -1,11 +1,15 @@
 import { z } from "zod";
 
 import { runAutopilot } from "../data/autopilot.js";
+import { ensureAccountsReady } from "../data/accounts.js";
 import { listSchedulableAccounts } from "../data/scheduling.js";
 import { publicProcedure, router } from "../trpc.js";
 
 export const autopilotRouter = router({
-  accounts: publicProcedure.query(() => listSchedulableAccounts()),
+  accounts: publicProcedure.query(async () => {
+    await ensureAccountsReady();
+    return listSchedulableAccounts();
+  }),
 
   run: publicProcedure
     .input(

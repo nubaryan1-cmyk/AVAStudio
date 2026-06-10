@@ -13,6 +13,7 @@
   },
   "dependencies": {
     "@avastudio/media": "workspace:*",
+    "@avastudio/db": "workspace:*",
     "@avastudio/queue": "workspace:*",
     "@avastudio/shared": "workspace:*",
     "@avastudio/ui": "workspace:*",

@@ -1,7 +1,7 @@
 import { decryptJSON, encryptJSON } from "@avastudio/shared";
 import { eq } from "drizzle-orm";
 
-import { platform as platformEnum, socialAccounts } from "../schema/index.js";
+import { organizations, platform as platformEnum, socialAccounts } from "../schema/index.js";
 
 import { envKek, getOrCreateOrgDataKey } from "./org-keys.js";
 
@@ -84,4 +84,22 @@ export async function listSocialAccountsForUi(db: Db, orgId: string) {
     })
     .from(socialAccounts)
     .where(eq(socialAccounts.orgId, orgId));
+}
+
+
+/** Находит/создаёт дефолт-организацию (single-tenant на тест-фазе). Возвращает её id. */
+export async function getOrCreateDefaultOrg(db: Db): Promise<string> {
+  const existing = await db
+    .select({ id: organizations.id })
+    .from(organizations)
+    .where(eq(organizations.slug, "default"))
+    .limit(1);
+  if (existing[0]) return existing[0].id;
+  const created = await db
+    .insert(organizations)
+    .values({ name: "AVAStudio", slug: "default" })
+    .returning({ id: organizations.id });
+  const row = created[0];
+  if (!row) throw new Error("Не удалось создать организацию");
+  return row.id;
 }
