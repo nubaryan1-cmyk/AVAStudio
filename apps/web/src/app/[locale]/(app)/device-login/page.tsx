@@ -43,6 +43,10 @@ export default function DevicePanelPage(): JSX.Element {
   const [puser, setPuser] = useState("");
   const [ppass, setPpass] = useState("");
 
+  // каталог приложений DuoPlus
+  const [apps, setApps] = useState<{ id: string; name: string; pkg: string }[]>([]);
+  const [appId, setAppId] = useState<string>("");
+
   const phone = phones.find((p) => p.id === selected);
 
   const loadPhones = useCallback(async () => {
@@ -63,6 +67,18 @@ export default function DevicePanelPage(): JSX.Element {
   useEffect(() => {
     void loadPhones();
   }, [loadPhones]);
+
+  useEffect(() => {
+    void (async () => {
+      try {
+        const r = await fetch("/api/device/apps");
+        const j = (await r.json()) as { ok: boolean; apps?: { id: string; name: string; pkg: string }[] };
+        if (j.ok) setApps(j.apps ?? []);
+      } catch {
+        /* ignore */
+      }
+    })();
+  }, []);
 
   // поток кадров экрана
   useEffect(() => {
@@ -200,6 +216,35 @@ export default function DevicePanelPage(): JSX.Element {
               </Button>
               <Button variant="secondary" disabled={busy} onClick={() => void post("/api/device/upload", { id: phone.id }, "Заливка поставлена в очередь")}>
                 Заливка
+              </Button>
+            </CardContent>
+          </Card>
+        )}
+
+        {phone && (
+          <Card>
+            <CardHeader>
+              <CardTitle>Приложения (каталог DuoPlus)</CardTitle>
+            </CardHeader>
+            <CardContent className="flex flex-wrap items-end gap-3">
+              <div className="min-w-[220px] flex-1">
+                <Label>Приложение</Label>
+                <select
+                  value={appId}
+                  onChange={(e) => setAppId(e.target.value)}
+                  className="mt-1 w-full rounded-md border bg-transparent px-3 py-2 text-sm"
+                >
+                  <option value="">— выбери приложение —</option>
+                  {apps.map((a) => (
+                    <option key={a.id} value={a.id}>{a.name}</option>
+                  ))}
+                </select>
+              </div>
+              <Button
+                disabled={busy || !appId}
+                onClick={() => void post("/api/device/install", { id: phone.id, appId }, "Приложение ставится на телефон…")}
+              >
+                Установить
               </Button>
             </CardContent>
           </Card>
