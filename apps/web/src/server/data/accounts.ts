@@ -62,12 +62,9 @@ const STORE = new Map<string, SocialAccount>();
 
 function seed(): void {
   if (STORE.size > 0) return;
-  const presets: Array<Omit<AddAccountInput, "secret"> & { status: AccountStatus; health: number }> = [
-    { platform: "instagram", handle: "@brand.reels", mechanism: "phone", status: "active", health: 88 },
-    { platform: "tiktok", handle: "@promo.short", mechanism: "browser", status: "warmup", health: 64 },
-    { platform: "reddit", handle: "u/brand_official", mechanism: "api", status: "checkpoint", health: 42 },
-    { platform: "threads", handle: "@brand.threads", mechanism: "api", status: "active", health: 91 },
-  ];
+  // Демо-аккаунты убраны (п.2 — чистка вымышленных данных): список начинается пустым
+  // и наполняется реальными аккаунтами, добавленными во вкладке «Устройство».
+  const presets: Array<Omit<AddAccountInput, "secret"> & { status: AccountStatus; health: number }> = [];
   for (const p of presets) {
     const id = `acc_${(seq += 1)}`;
     STORE.set(id, {

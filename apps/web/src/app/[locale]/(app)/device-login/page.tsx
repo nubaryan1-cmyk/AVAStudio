@@ -3,6 +3,8 @@
 import { Badge, Button, Card, CardContent, CardHeader, CardTitle, Input, Label } from "@avastudio/ui";
 import { useCallback, useEffect, useRef, useState } from "react";
 
+import { trpc } from "@/lib/trpc";
+
 /**
  * Панель управления облачным телефоном DuoPlus прямо с сайта (TASK 22.1 / Трек A):
  * список телефонов, настройка прокси, вкл/выкл, живой экран (ADB-скриншоты), Прогрев/Заливка.
@@ -46,6 +48,22 @@ export default function DevicePanelPage(): JSX.Element {
   // каталог приложений DuoPlus
   const [apps, setApps] = useState<{ id: string; name: string; pkg: string }[]>([]);
   const [appId, setAppId] = useState<string>("");
+
+  // аккаунт (вход/сохранение)
+  const [accHandle, setAccHandle] = useState("");
+  const [accSecret, setAccSecret] = useState("");
+  const utils = trpc.useUtils();
+  const bindPhone = trpc.accounts.bindPhone.useMutation();
+  const addAccount = trpc.accounts.add.useMutation({
+    onSuccess: (acc) => {
+      if (phone) bindPhone.mutate({ id: acc.id, phoneId: phone.id });
+      setMsg(`Аккаунт ${acc.handle} сохранён и привязан к телефону — виден в Автозаливе`);
+      setAccHandle("");
+      setAccSecret("");
+      void utils.autopilot.accounts.invalidate();
+    },
+    onError: (e) => setMsg(`Ошибка аккаунта: ${e.message}`),
+  });
 
   const phone = phones.find((p) => p.id === selected);
 
@@ -245,6 +263,54 @@ export default function DevicePanelPage(): JSX.Element {
                 onClick={() => void post("/api/device/install", { id: phone.id, appId }, "Приложение ставится на телефон…")}
               >
                 Установить
+              </Button>
+            </CardContent>
+          </Card>
+        )}
+
+        {phone && (
+          <Card>
+            <CardHeader>
+              <CardTitle>Аккаунт Instagram</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              <p className="text-sm text-muted-foreground">
+                Войди в существующий аккаунт или зарегистрируй новый. Сохранённый аккаунт сразу появится во
+                вкладке «Автозалив».
+              </p>
+              <div className="grid gap-3 sm:grid-cols-2">
+                <div>
+                  <Label htmlFor="acc-handle">Логин / @имя</Label>
+                  <Input
+                    id="acc-handle"
+                    value={accHandle}
+                    onChange={(e) => setAccHandle(e.target.value)}
+                    placeholder="@my.account"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="acc-secret">Пароль</Label>
+                  <Input
+                    id="acc-secret"
+                    type="password"
+                    value={accSecret}
+                    onChange={(e) => setAccSecret(e.target.value)}
+                    placeholder="••••••••"
+                  />
+                </div>
+              </div>
+              <Button
+                disabled={addAccount.isPending || accHandle.trim().length < 2 || accSecret.length < 1}
+                onClick={() =>
+                  addAccount.mutate({
+                    platform: "instagram",
+                    handle: accHandle.trim(),
+                    mechanism: "phone",
+                    secret: accSecret,
+                  })
+                }
+              >
+                {addAccount.isPending ? "Сохраняю…" : "Войти / сохранить аккаунт"}
               </Button>
             </CardContent>
           </Card>
