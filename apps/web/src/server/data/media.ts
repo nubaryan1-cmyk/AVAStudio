@@ -72,12 +72,8 @@ function validateUpload(input: AddAssetInput): ProbeData | null {
 
 function seed(): void {
   if (STORE.size > 0) return;
-  const presets: AddAssetInput[] = [
-    { name: "promo-reel.mp4", type: "video", sizeBytes: 18_400_000, durationSec: 28, width: 1080, height: 1920, fps: 30, tags: ["reels", "promo"] },
-    { name: "teaser.mp4", type: "video", sizeBytes: 9_200_000, durationSec: 12, width: 1920, height: 1080, fps: 24, tags: ["teaser"] },
-    { name: "cover.png", type: "image", sizeBytes: 820_000, durationSec: 0, width: 1080, height: 1080, tags: ["cover", "promo"] },
-    { name: "voiceover.mp3", type: "audio", sizeBytes: 1_300_000, durationSec: 34, width: 0, height: 0, tags: ["audio"] },
-  ];
+  // Демо-медиа убрано (п.2): медиатека начинается пустой и наполняется загрузками пользователя.
+  const presets: AddAssetInput[] = [];
   for (const p of presets) void insert(p, "2026-05-29T10:00:00Z");
 }
 
