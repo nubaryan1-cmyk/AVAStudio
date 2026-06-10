@@ -1,0 +1,66 @@
+/** Тонкий serverless-клиент DuoPlus Open API (для роутов сайта). Ключ из Doppler/env. */
+const BASE = "https://openapi.duoplus.net";
+
+export interface DuoPhone {
+  id: string;
+  name: string;
+  status: number; // 0 не сконфигурирован;1 вкл;2 выкл;3 истёк;4 просрочено;10 включается;11 конфиг.;12 ошибка
+  os?: string;
+  area?: string;
+  ip?: string;
+  adb?: string;
+}
+
+function apiKey(): string {
+  // eslint-disable-next-line no-process-env
+  const k = process.env.DUOPLUS_API_KEY;
+  if (!k) throw new Error("DUOPLUS_API_KEY не задан");
+  return k;
+}
+
+export async function duo<T>(path: string, body: Record<string, unknown>): Promise<T> {
+  const res = await fetch(`${BASE}${path}`, {
+    method: "POST",
+    headers: { "DuoPlus-API-Key": apiKey(), "Content-Type": "application/json", Lang: "ru" },
+    body: JSON.stringify(body),
+    cache: "no-store",
+  });
+  const env = (await res.json().catch(() => ({}))) as { code?: number; data?: T; message?: string };
+  if (!res.ok || env.code !== 200) {
+    throw new Error(`duoplus ${path}: code ${env.code ?? res.status} ${env.message ?? ""}`.trim());
+  }
+  return (env.data ?? ({} as T));
+}
+
+export async function listPhones(): Promise<DuoPhone[]> {
+  const data = await duo<{ list?: DuoPhone[] }>("/api/v1/cloudPhone/list", { page: 1, pagesize: 100 });
+  return (data.list ?? []).filter((d) => typeof d.id === "string");
+}
+
+export async function powerPhone(id: string, on: boolean): Promise<void> {
+  await duo(`/api/v1/cloudPhone/${on ? "powerOn" : "powerOff"}`, { image_ids: [id] });
+}
+
+/** Скриншот экрана через ADB (screencap + base64) → data:image/png;base64. */
+export async function screenshot(id: string): Promise<string> {
+  const data = await duo<{ success?: boolean; content?: string; message?: string }>(
+    "/api/v1/cloudPhone/command",
+    { image_id: id, command: "screencap -p /sdcard/_ava.png >/dev/null 2>&1; base64 /sdcard/_ava.png" },
+  );
+  if (!data.content) throw new Error(data.message || "пустой кадр (ADB включён? телефон запущен?)");
+  return data.content.replace(/\s+/g, "");
+}
+
+export interface ProxyConfig {
+  protocol: string; // socks5 | http | https
+  host: string;
+  port: number;
+  user?: string;
+  password?: string;
+}
+
+export async function initProxy(id: string, proxy: ProxyConfig, ipScan = "ip2location"): Promise<void> {
+  await duo("/api/v1/cloudPhone/initProxy", {
+    images: [{ image_id: id, ip_scan_channel: ipScan, proxy }],
+  });
+}

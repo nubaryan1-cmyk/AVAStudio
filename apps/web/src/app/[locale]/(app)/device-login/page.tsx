@@ -1,198 +1,234 @@
 "use client";
 
-import {
-  Badge,
-  Button,
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-  Input,
-  Label,
-} from "@avastudio/ui";
-import { useEffect, useRef, useState } from "react";
+import { Badge, Button, Card, CardContent, CardHeader, CardTitle, Input, Label } from "@avastudio/ui";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 /**
- * Вкладка «Вход» (Автозалив): вход в аккаунт + запуск прогрева/заливки.
- * Справа — живой экран телефона (только просмотр, тапы заблокированы).
+ * Панель управления облачным телефоном DuoPlus прямо с сайта (TASK 22.1 / Трек A):
+ * список телефонов, настройка прокси, вкл/выкл, живой экран (ADB-скриншоты), Прогрев/Заливка.
  */
-type Status = { active: boolean; stage: string; ts?: string; next_session_at?: string; sessions_done?: number };
+interface Phone {
+  id: string;
+  name: string;
+  status: number;
+  os?: string;
+  area?: string;
+  ip?: string;
+}
 
-const ta =
-  "min-h-[72px] w-full rounded-md border bg-transparent px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-ring";
+const STATUS_LABEL: Record<number, string> = {
+  0: "Не сконфигурирован",
+  1: "Включён",
+  2: "Выключен",
+  3: "Истёк",
+  4: "Просрочено продление",
+  10: "Включается…",
+  11: "Конфигурируется…",
+  12: "Ошибка конфигурации",
+};
 
-export default function DeviceLoginPage(): JSX.Element {
-  const [login, setLogin] = useState("");
-  const [password, setPassword] = useState("");
-  const [proxy, setProxy] = useState("");
-  // прогрев
-  const [warmHashtags, setWarmHashtags] = useState("");
-  const [warmNote, setWarmNote] = useState("");
-  // заливка
-  const [upCaption, setUpCaption] = useState("");
-  const [upHashtags, setUpHashtags] = useState("");
+export default function DevicePanelPage(): JSX.Element {
+  const [phones, setPhones] = useState<Phone[]>([]);
+  const [selected, setSelected] = useState<string>("");
+  const [msg, setMsg] = useState<string>("");
+  const [busy, setBusy] = useState(false);
+  const [screenOn, setScreenOn] = useState(false);
+  const [frameSrc, setFrameSrc] = useState<string>("");
+  const timer = useRef<ReturnType<typeof setInterval> | null>(null);
 
-  const [busy, setBusy] = useState<string | null>(null);
-  const [status, setStatus] = useState<Status>({ active: false, stage: "idle" });
-  const [hasStarted, setHasStarted] = useState(false);
-  const [frameTick, setFrameTick] = useState(0);
-  const [error, setError] = useState<string | null>(null);
-  const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  // прокси
+  const [protocol, setProtocol] = useState("socks5");
+  const [host, setHost] = useState("");
+  const [port, setPort] = useState("");
+  const [puser, setPuser] = useState("");
+  const [ppass, setPpass] = useState("");
 
-  useEffect(() => {
-    pollRef.current = setInterval(async () => {
-      try {
-        const r = await fetch("/api/device/status", { cache: "no-store" });
-        if (r.ok) setStatus((await r.json()) as Status);
-      } catch {
-        /* ignore */
+  const phone = phones.find((p) => p.id === selected);
+
+  const loadPhones = useCallback(async () => {
+    try {
+      const r = await fetch("/api/device/list");
+      const j = (await r.json()) as { ok: boolean; phones?: Phone[]; error?: string };
+      if (!j.ok) {
+        setMsg(`Список: ${j.error ?? "ошибка"}`);
+        return;
       }
-      setFrameTick((t) => t + 1);
-    }, 700);
-    return () => {
-      if (pollRef.current) clearInterval(pollRef.current);
-    };
+      setPhones(j.phones ?? []);
+      setSelected((s) => s || j.phones?.[0]?.id || "");
+    } catch (e) {
+      setMsg(`Список: ${e instanceof Error ? e.message : String(e)}`);
+    }
   }, []);
 
-  async function call(path: string, payload: Record<string, unknown>, tag: string): Promise<void> {
-    setError(null);
-    setBusy(tag);
+  useEffect(() => {
+    void loadPhones();
+  }, [loadPhones]);
+
+  // поток кадров экрана
+  useEffect(() => {
+    if (timer.current) clearInterval(timer.current);
+    if (screenOn && selected) {
+      const tick = (): void => setFrameSrc(`/api/device/frame?id=${encodeURIComponent(selected)}&t=${Date.now()}`);
+      tick();
+      timer.current = setInterval(tick, 2000);
+    }
+    return () => {
+      if (timer.current) clearInterval(timer.current);
+    };
+  }, [screenOn, selected]);
+
+  async function post(path: string, body: Record<string, unknown>, okMsg: string): Promise<void> {
+    setBusy(true);
+    setMsg("");
     try {
       const r = await fetch(path, {
         method: "POST",
         headers: { "content-type": "application/json" },
-        body: JSON.stringify(payload),
+        body: JSON.stringify(body),
       });
       const j = (await r.json()) as { ok: boolean; error?: string };
-      if (!j.ok) setError(j.error ?? "Не удалось запустить");
-      else setHasStarted(true);
-    } catch {
-      setError("Сеть недоступна");
+      setMsg(j.ok ? okMsg : `Ошибка: ${j.error ?? "неизвестно"}`);
+      if (j.ok) void loadPhones();
+    } catch (e) {
+      setMsg(`Ошибка: ${e instanceof Error ? e.message : String(e)}`);
     } finally {
-      setBusy(null);
+      setBusy(false);
     }
   }
 
-  const stageLabel: Record<string, string> = {
-    idle: "Ожидание",
-    starting: "Запуск…",
-    opening_login: "Открываю Instagram…",
-    cookies: "Согласие cookies…",
-    typing_username: "Ввожу логин…",
-    typing_password: "Ввожу пароль…",
-    submitting: "Вхожу…",
-    resume_check: "Проверяю сессию…",
-    resumed: "Сессия активна",
-    logged_in: "Вход выполнен",
-    done: "Готово",
-    warmup_scrolling: "Прогрев: листаю ленту…",
-    failed: "Ошибка",
-    error: "Ошибка",
-    resting: "Перерыв между заходами",
-  };
-
-  function label(st: Status): string {
-    if (st.stage.startsWith("session")) return "Прогрев: заход…";
-    if (st.stage === "resting" && st.next_session_at) return `Перерыв — заход в ${st.next_session_at}`;
-    return stageLabel[st.stage] ?? st.stage;
-  }
-
   return (
-    <div className="glow-panel grid gap-6 rounded-xl border p-4 md:grid-cols-[380px_1fr] md:p-6">
-      {/* Левая колонка — действия */}
-      <div className="grid gap-6">
-        {/* Вход */}
+    <div className="grid gap-6 lg:grid-cols-[1fr_360px]">
+      <div className="space-y-6">
         <Card>
           <CardHeader>
-            <CardTitle>Вход в аккаунт</CardTitle>
-            <CardDescription>Бот сам зайдёт в аккаунт. Экран справа — только наблюдение.</CardDescription>
+            <CardTitle>Облачные телефоны (DuoPlus)</CardTitle>
           </CardHeader>
-          <CardContent className="grid gap-3">
-            <div className="grid gap-1.5">
-              <Label htmlFor="login">Логин</Label>
-              <Input id="login" value={login} onChange={(e) => setLogin(e.target.value)} placeholder="username" autoComplete="off" />
-            </div>
-            <div className="grid gap-1.5">
-              <Label htmlFor="password">Пароль</Label>
-              <Input id="password" type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="••••••••" autoComplete="new-password" />
-            </div>
-            <div className="grid gap-1.5">
-              <Label htmlFor="proxy">Прокси</Label>
-              <Input id="proxy" value={proxy} onChange={(e) => setProxy(e.target.value)} placeholder="ip:port:логин:пароль" autoComplete="off" />
-            </div>
-            <Button onClick={() => void call("/api/device/login", { login, password, proxy }, "login")} disabled={busy !== null || !login || !password}>
-              {busy === "login" ? "Запускаю…" : "Вход"}
+          <CardContent className="space-y-3">
+            {phones.length === 0 && <p className="text-sm text-muted-foreground">Телефоны не найдены.</p>}
+            {phones.map((p) => (
+              <button
+                key={p.id}
+                onClick={() => setSelected(p.id)}
+                className={`flex w-full items-center justify-between rounded-md border px-3 py-2 text-left text-sm ${
+                  p.id === selected ? "border-primary bg-primary/10" : "border-border"
+                }`}
+              >
+                <span>
+                  <b>{p.name}</b> <span className="text-muted-foreground">· {p.os ?? ""} · {p.area ?? ""}</span>
+                </span>
+                <Badge variant={p.status === 1 ? "default" : "secondary"}>{STATUS_LABEL[p.status] ?? p.status}</Badge>
+              </button>
+            ))}
+            <Button variant="outline" size="sm" onClick={() => void loadPhones()}>
+              Обновить список
             </Button>
           </CardContent>
         </Card>
 
-        {/* Прогрев */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Прогрев</CardTitle>
-            <CardDescription>Бот листает ленту и тематику по-человечески. Поля — для тематического прогрева.</CardDescription>
-          </CardHeader>
-          <CardContent className="grid gap-3">
-            <div className="grid gap-1.5">
-              <Label htmlFor="warmHashtags">Хэштеги (тематика прогрева)</Label>
-              <textarea id="warmHashtags" className={ta} value={warmHashtags} onChange={(e) => setWarmHashtags(e.target.value)} placeholder="#fitness #travel #food" />
-            </div>
-            <div className="grid gap-1.5">
-              <Label htmlFor="warmNote">Описание / заметка</Label>
-              <textarea id="warmNote" className={ta} value={warmNote} onChange={(e) => setWarmNote(e.target.value)} placeholder="ниша аккаунта, интересы…" />
-            </div>
-            <Button variant="secondary" onClick={() => void call("/api/device/warmup", { login, proxy, hashtags: warmHashtags, note: warmNote }, "warmup")} disabled={busy !== null || !login}>
-              {busy === "warmup" ? "Запускаю…" : "Запустить прогрев"}
-            </Button>
-          </CardContent>
-        </Card>
+        {phone && (
+          <Card>
+            <CardHeader>
+              <CardTitle>Прокси для {phone.name}</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <Label>Протокол</Label>
+                  <select
+                    className="mt-1 w-full rounded-md border bg-transparent px-3 py-2 text-sm"
+                    value={protocol}
+                    onChange={(e) => setProtocol(e.target.value)}
+                  >
+                    <option value="socks5">socks5</option>
+                    <option value="http">http</option>
+                    <option value="https">https</option>
+                  </select>
+                </div>
+                <div>
+                  <Label>Хост</Label>
+                  <Input value={host} onChange={(e) => setHost(e.target.value)} placeholder="1.2.3.4" />
+                </div>
+                <div>
+                  <Label>Порт</Label>
+                  <Input value={port} onChange={(e) => setPort(e.target.value)} placeholder="1080" />
+                </div>
+                <div>
+                  <Label>Логин (опц.)</Label>
+                  <Input value={puser} onChange={(e) => setPuser(e.target.value)} />
+                </div>
+                <div className="col-span-2">
+                  <Label>Пароль (опц.)</Label>
+                  <Input type="password" value={ppass} onChange={(e) => setPpass(e.target.value)} />
+                </div>
+              </div>
+              <Button
+                disabled={busy}
+                onClick={() =>
+                  void post(
+                    "/api/device/proxy",
+                    { id: phone.id, protocol, host, port: Number(port), user: puser, password: ppass },
+                    "Прокси настроен. Теперь можно включать телефон.",
+                  )
+                }
+              >
+                Сохранить прокси
+              </Button>
+            </CardContent>
+          </Card>
+        )}
 
-        {/* Заливка */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Заливка Reels</CardTitle>
-            <CardDescription>Подпись и хэштеги ниже применяются к рилсам, у которых нет своих.</CardDescription>
-          </CardHeader>
-          <CardContent className="grid gap-3">
-            <div className="grid gap-1.5">
-              <Label htmlFor="upCaption">Подпись по умолчанию</Label>
-              <textarea id="upCaption" className={ta} value={upCaption} onChange={(e) => setUpCaption(e.target.value)} placeholder="текст под рилс" />
-            </div>
-            <div className="grid gap-1.5">
-              <Label htmlFor="upHashtags">Хэштеги по умолчанию</Label>
-              <Input id="upHashtags" value={upHashtags} onChange={(e) => setUpHashtags(e.target.value)} placeholder="#reels #viral #fyp" />
-            </div>
-            <Button onClick={() => void call("/api/device/upload", { login, proxy, caption: upCaption, hashtags: upHashtags }, "upload")} disabled={busy !== null || !login}>
-              {busy === "upload" ? "Запускаю…" : "Запустить заливку"}
-            </Button>
-          </CardContent>
-        </Card>
+        {phone && (
+          <Card>
+            <CardHeader>
+              <CardTitle>Управление</CardTitle>
+            </CardHeader>
+            <CardContent className="flex flex-wrap gap-3">
+              <Button disabled={busy} onClick={() => void post("/api/device/power", { id: phone.id, on: true }, "Включаю…")}>
+                Включить
+              </Button>
+              <Button
+                variant="outline"
+                disabled={busy}
+                onClick={() => void post("/api/device/power", { id: phone.id, on: false }, "Выключаю…")}
+              >
+                Выключить
+              </Button>
+              <Button variant="secondary" disabled={busy} onClick={() => void post("/api/device/warmup", { id: phone.id }, "Прогрев поставлен в очередь")}>
+                Прогрев
+              </Button>
+              <Button variant="secondary" disabled={busy} onClick={() => void post("/api/device/upload", { id: phone.id }, "Заливка поставлена в очередь")}>
+                Заливка
+              </Button>
+            </CardContent>
+          </Card>
+        )}
 
-        {error ? <p className="text-sm text-destructive">{error}</p> : null}
+        {msg && <p className="text-sm text-muted-foreground">{msg}</p>}
       </div>
 
-      {/* Правая колонка — живой экран (шире) */}
-      <Card className="overflow-hidden">
-        <CardHeader className="flex flex-row items-center justify-between gap-2">
-          <CardTitle>Экран телефона</CardTitle>
-          <Badge variant={status.active ? "default" : "secondary"}>{label(status)}</Badge>
-        </CardHeader>
-        <CardContent>
-          <div className="relative mx-auto aspect-[390/844] w-full max-w-[440px] overflow-hidden rounded-2xl border bg-black" style={{ maxHeight: "78vh" }}>
-            <div className="absolute inset-0 z-10" aria-hidden />
-            {status.active || hasStarted ? (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img src={`/api/device/frame?t=${frameTick}`} alt="phone screen" className="absolute inset-0 h-full w-full select-none object-contain" draggable={false} />
-            ) : (
-              <div className="absolute inset-0 flex items-center justify-center p-4 text-center text-sm text-muted-foreground">
-                Экран появится после запуска
-              </div>
-            )}
-          </div>
-          <p className="mt-3 text-center text-xs text-muted-foreground">Только просмотр — взаимодействие с экраном заблокировано.</p>
-        </CardContent>
-      </Card>
+      <div className="space-y-3">
+        <Card>
+          <CardHeader>
+            <CardTitle>Экран телефона</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            <Button size="sm" variant={screenOn ? "outline" : "default"} disabled={!selected} onClick={() => setScreenOn((v) => !v)}>
+              {screenOn ? "Остановить экран" : "Показать экран"}
+            </Button>
+            <div className="aspect-[9/19] w-full overflow-hidden rounded-lg border bg-black">
+              {screenOn && frameSrc ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img src={frameSrc} alt="экран телефона" className="h-full w-full object-contain" />
+              ) : (
+                <div className="flex h-full items-center justify-center text-xs text-muted-foreground">
+                  Экран выключен
+                </div>
+              )}
+            </div>
+            <p className="text-xs text-muted-foreground">Кадры через ADB (~2с). Нужны включённый телефон и ADB.</p>
+          </CardContent>
+        </Card>
+      </div>
     </div>
   );
 }
