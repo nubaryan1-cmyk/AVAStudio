@@ -24,7 +24,6 @@ const NAV: ReadonlyArray<{ href: string; key: string; match?: ReadonlyArray<stri
   { href: "/music", key: "editing", match: ["/uniqueizer", "/editor"] },
   { href: "/accounts", key: "devices", match: ["/proxies"] },
   { href: "/autopilot", key: "autopilot", match: ["/calendar", "/device-login"] },
-  { href: "/billing", key: "billing" },
 ];
 
 export default function AppLayout({ children }: { children: ReactNode }): JSX.Element {
@@ -46,7 +45,7 @@ export default function AppLayout({ children }: { children: ReactNode }): JSX.El
           <>
             <LocaleSwitcher />
             <ThemeToggle />
-            <AccountMenu settingsLabel={t("settings")} />
+            <AccountMenu settingsLabel={t("settings")} billingLabel={t("billing")} />
           </>
         }
       >

@@ -18,6 +18,12 @@ function isActive(pathname: string, item: NavItem): boolean {
   return (item.match ?? []).some((m) => matchesPrefix(pathname, m));
 }
 
+/** Заголовок активного раздела (для шапки рабочей области). */
+function activeLabel(pathname: string, items: ReadonlyArray<NavItem>, fallback: string): string {
+  const found = items.find((it) => isActive(pathname, it));
+  return found?.label ?? fallback;
+}
+
 function NavLinks({
   items,
   pathname,
@@ -67,19 +73,34 @@ export function AppNav({
 }): JSX.Element {
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
+  const [collapsed, setCollapsed] = useState(false);
 
   // Закрываем мобильное меню при смене маршрута.
   useEffect(() => {
     setOpen(false);
   }, [pathname]);
 
+  const title = activeLabel(pathname, items, workspaceLabel);
+
   return (
     <div className="flex min-h-screen">
-      {/* Десктопный сайдбар */}
-      <aside className="hidden w-60 shrink-0 border-r bg-muted/20 md:block">
-        <div className="px-6 py-5 text-lg font-bold">{brand}</div>
-        <NavLinks items={items} pathname={pathname} />
-      </aside>
+      {/* Десктопный сайдбар (сворачивается) */}
+      {!collapsed ? (
+        <aside className="hidden w-60 shrink-0 border-r bg-muted/20 md:block">
+          <div className="flex items-center justify-between px-6 py-5">
+            <span className="text-lg font-bold">{brand}</span>
+            <button
+              type="button"
+              aria-label="Свернуть меню"
+              className="rounded-md p-1.5 text-muted-foreground hover:bg-accent hover:text-foreground"
+              onClick={() => setCollapsed(true)}
+            >
+              <CollapseIcon />
+            </button>
+          </div>
+          <NavLinks items={items} pathname={pathname} />
+        </aside>
+      ) : null}
 
       {/* Мобильный выезжающий drawer */}
       {open ? (
@@ -112,6 +133,7 @@ export function AppNav({
       <div className="flex flex-1 flex-col">
         <header className="flex h-16 items-center justify-between border-b px-4 md:px-6">
           <div className="flex items-center gap-3">
+            {/* Мобильное открытие меню */}
             <button
               type="button"
               aria-label="Открыть меню"
@@ -120,7 +142,18 @@ export function AppNav({
             >
               <MenuIcon />
             </button>
-            <span className="text-sm text-muted-foreground">{workspaceLabel}</span>
+            {/* Десктоп: развернуть свёрнутый сайдбар */}
+            {collapsed ? (
+              <button
+                type="button"
+                aria-label="Развернуть меню"
+                className="hidden rounded-md p-2 text-muted-foreground hover:bg-accent hover:text-foreground md:inline-flex"
+                onClick={() => setCollapsed(false)}
+              >
+                <MenuIcon />
+              </button>
+            ) : null}
+            <span className="text-base font-semibold">{title}</span>
           </div>
           <div className="flex items-center gap-3">{toolbar}</div>
         </header>
@@ -134,16 +167,7 @@ export function AppNav({
 
 function MenuIcon(): JSX.Element {
   return (
-    <svg
-      width="20"
-      height="20"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      aria-hidden="true"
-    >
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true">
       <line x1="3" y1="6" x2="21" y2="6" />
       <line x1="3" y1="12" x2="21" y2="12" />
       <line x1="3" y1="18" x2="21" y2="18" />
@@ -151,18 +175,17 @@ function MenuIcon(): JSX.Element {
   );
 }
 
+function CollapseIcon(): JSX.Element {
+  return (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="M15 18l-6-6 6-6" />
+    </svg>
+  );
+}
+
 function CloseIcon(): JSX.Element {
   return (
-    <svg
-      width="20"
-      height="20"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      aria-hidden="true"
-    >
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true">
       <line x1="6" y1="6" x2="18" y2="18" />
       <line x1="6" y1="18" x2="18" y2="6" />
     </svg>

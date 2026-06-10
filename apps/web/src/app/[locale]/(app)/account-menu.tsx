@@ -8,7 +8,7 @@ import { Link, useRouter } from "@/i18n/navigation";
  * Кружок аккаунта в правом верхнем углу. Открывает меню: тариф, настройки, выход.
  * Настройки переехали сюда из сайдбара.
  */
-export function AccountMenu({ settingsLabel }: { settingsLabel: string }): JSX.Element {
+export function AccountMenu({ settingsLabel, billingLabel }: { settingsLabel: string; billingLabel: string }): JSX.Element {
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
   const router = useRouter();
@@ -48,6 +48,13 @@ export function AccountMenu({ settingsLabel }: { settingsLabel: string }): JSX.E
             <p className="text-xs text-muted-foreground">Тариф</p>
             <p className="text-sm font-medium">Free</p>
           </div>
+          <Link
+            href="/billing"
+            onClick={() => setOpen(false)}
+            className="block px-4 py-2.5 text-sm hover:bg-accent"
+          >
+            {billingLabel}
+          </Link>
           <Link
             href="/settings"
             onClick={() => setOpen(false)}
