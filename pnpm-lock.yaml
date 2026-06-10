@@ -156,6 +156,9 @@ importers:
       hono:
         specifier: 4.12.23
         version: 4.12.23
+      tsx:
+        specifier: 4.19.1
+        version: 4.19.1
     devDependencies:
       '@avastudio/config':
         specifier: workspace:*
@@ -169,9 +172,6 @@ importers:
       eslint:
         specifier: 9.12.0
         version: 9.12.0(jiti@2.6.1)
-      tsx:
-        specifier: 4.19.1
-        version: 4.19.1
       typescript:
         specifier: 5.4.5
         version: 5.4.5
