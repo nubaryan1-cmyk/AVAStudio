@@ -30,6 +30,13 @@ export const jobSchemas = {
   "post-reddit": postingJobSchema,
   "post-threads": postingJobSchema,
   "warmup-account": z.object({ orgId: uuidSchema, accountId: uuidSchema }),
+  "phone-task": z.object({
+    imageId: z.string().min(1),
+    kind: z.enum(["warmup", "upload"]),
+    caption: z.string().optional(),
+    assetUrl: z.string().url().optional(),
+    rounds: z.number().int().min(1).max(50).optional(),
+  }),
   "scrape-stats": z.object({ orgId: uuidSchema, accountId: uuidSchema }),
   "ai-image": z.object({
     orgId: uuidSchema,

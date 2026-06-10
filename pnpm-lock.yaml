@@ -44,6 +44,9 @@ importers:
       '@avastudio/media':
         specifier: workspace:*
         version: link:../../packages/media
+      '@avastudio/queue':
+        specifier: workspace:*
+        version: link:../../packages/queue
       '@avastudio/shared':
         specifier: workspace:*
         version: link:../../packages/shared

@@ -12,6 +12,7 @@ import {
 import { createAiAudioProcessor, createAiImageProcessor, createAiVideoProcessor } from "./ai.js";
 import { createRenderVideoProcessor } from "./render-video.js";
 import { createUniqueMediaProcessor } from "./unique-media.js";
+import { createPhoneTaskProcessor } from "./phone.js";
 
 import type { AiProcessorContext } from "./ai.js";
 import type { ProcessorContext } from "./shared.js";
@@ -57,6 +58,7 @@ export function buildProcessors(
   return {
     "render-video": createRenderVideoProcessor(ctx),
     "unique-media": createUniqueMediaProcessor(ctx),
+    "phone-task": createPhoneTaskProcessor(ctx.logger),
     "ai-image": createAiImageProcessor(aiCtx),
     "ai-video": createAiVideoProcessor(aiCtx),
     "ai-audio": createAiAudioProcessor(aiCtx),

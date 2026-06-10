@@ -8,7 +8,7 @@ const UUID = "00000000-0000-4000-8000-000000000002";
 
 describe("реестр очередей", () => {
   it("определены все 12 очередей", () => {
-    expect(QUEUE_NAMES).toHaveLength(12);
+    expect(QUEUE_NAMES).toHaveLength(13);
     expect(QUEUE_NAMES).toContain("render-video");
     expect(QUEUE_NAMES).toContain("send-email");
     expect(QUEUE_NAMES).toContain("ai-video");
