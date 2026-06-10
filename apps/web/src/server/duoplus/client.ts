@@ -41,14 +41,29 @@ export async function powerPhone(id: string, on: boolean): Promise<void> {
   await duo(`/api/v1/cloudPhone/${on ? "powerOn" : "powerOff"}`, { image_ids: [id] });
 }
 
-/** Скриншот экрана через ADB (screencap + base64) → data:image/png;base64. */
-export async function screenshot(id: string): Promise<string> {
+/** Включить ADB на телефоне (нужно один раз, до любых команд/скриншота). Идемпотентно. */
+export async function enableAdb(id: string): Promise<void> {
+  await duo("/api/v1/cloudPhone/openAdb", { image_ids: [id] });
+}
+
+async function screencapOnce(id: string): Promise<string> {
   const data = await duo<{ success?: boolean; content?: string; message?: string }>(
     "/api/v1/cloudPhone/command",
     { image_id: id, command: "screencap -p /sdcard/_ava.png >/dev/null 2>&1; base64 /sdcard/_ava.png" },
   );
-  if (!data.content) throw new Error(data.message || "пустой кадр (ADB включён? телефон запущен?)");
-  return data.content.replace(/\s+/g, "");
+  return (data.content ?? "").replace(/\s+/g, "");
+}
+
+/** Скриншот экрана через ADB (screencap + base64). Самовосстановление: если пусто — включаем ADB и пробуем ещё раз. */
+export async function screenshot(id: string): Promise<string> {
+  let content = await screencapOnce(id);
+  if (!content) {
+    await enableAdb(id).catch(() => undefined); // ADB мог быть выключен
+    await new Promise((r) => setTimeout(r, 1500));
+    content = await screencapOnce(id);
+  }
+  if (!content) throw new Error("пустой кадр (телефон ещё загружается? ADB включается)");
+  return content;
 }
 
 export interface ProxyConfig {
