@@ -2,6 +2,8 @@ import type { JobProcessor } from "./index.js";
 import type { Logger } from "@avastudio/shared";
 import type { Job } from "bullmq";
 
+import { likeBudgetForRun, isQuietHours, humanPause as abPause, LIMITS } from "./antiban.js";
+
 /**
  * Процессор очереди `phone-task` (ЭТАП 22.1, Слой 2). Водит облачный телефон DuoPlus
  * через ADB-команды с человекоподобными таймингами и координатами.
@@ -83,6 +85,7 @@ export interface PhoneTaskData {
   caption?: string;
   assetUrl?: string;
   rounds?: number;
+  tzOffsetHours?: number;
 }
 
 export function createPhoneTaskProcessor(logger: Logger): JobProcessor {
@@ -93,21 +96,33 @@ export function createPhoneTaskProcessor(logger: Logger): JobProcessor {
     const { w, h } = await screenSize(imageId);
 
     if (kind === "warmup") {
+      // Anti-ban: ночью аккаунт «спит» — никаких действий (AB.5).
+      const tzOffset = (job.data as PhoneTaskData).tzOffsetHours ?? 0;
+      if (isQuietHours(tzOffset)) {
+        logger.info({ jobId: job.id, imageId }, "phone-task: тихие часы — прогрев пропущен");
+        return { ok: true, kind, skipped: "quiet_hours" };
+      }
       await openInstagram(imageId);
-      await humanPause(6000); // дождаться загрузки ленты
+      await abPause(8000); // дождаться загрузки ленты (человеческая пауза)
+      // Лайков за прогон — строго 2–4/час (AB.5). Раскидываем по сессии.
+      const likeBudget = likeBudgetForRun();
       let likes = 0;
       for (let i = 0; i < rounds; i += 1) {
         await scrollFeed(imageId, w, h);
-        await humanPause(rnd(2500, 5500));
-        if (Math.random() < 0.25) {
+        await abPause(rnd(4000, 9000)); // дольше смотрим (watch-time — сигнал доверия)
+        // лайкаем редко и только в рамках часового бюджета
+        if (likes < likeBudget && Math.random() < 0.2) {
           await likePost(imageId, w, h);
           likes += 1;
-          await humanPause(rnd(1500, 3000));
+          await abPause(rnd(3000, 7000));
         }
         await job.updateProgress(Math.round(((i + 1) / rounds) * 100));
       }
-      logger.info({ jobId: job.id, imageId, rounds, likes }, "phone-task: прогрев завершён");
-      return { ok: true, kind, rounds, likes };
+      logger.info(
+        { jobId: job.id, imageId, rounds, likes, likeBudget, maxPerHour: LIMITS.likesPerHour.max },
+        "phone-task: прогрев завершён (anti-ban лимиты)",
+      );
+      return { ok: true, kind, rounds, likes, likeBudget };
     }
 
     // upload (базовый сценарий): открыть Instagram и экран создания поста.
